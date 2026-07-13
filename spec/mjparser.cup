@@ -1,0 +1,341 @@
+
+package rs.ac.bg.etf.pp1;
+import org.apache.log4j.*;
+import java_cup.runtime.*;
+import rs.ac.bg.etf.pp1.ast.*;
+
+parser code {:
+
+	boolean errorDetected;
+	
+	Logger log = Logger.getLogger(getClass());
+     
+    public void report_fatal_error(String message, Object info) throws java.lang.Exception {
+      done_parsing();
+      report_error(message, info);
+    }
+  
+    public void syntax_error(Symbol cur_token) {
+        report_error("\nSintaksna greska", cur_token);
+    }
+  
+    public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exception {
+        report_fatal_error("Fatalna greska, parsiranje se ne moze nastaviti", cur_token);
+    }
+
+    public void report_error(String message, Object info) {
+    	errorDetected = true;
+    	StringBuilder msg = new StringBuilder(message); 
+    	if (info instanceof Symbol)
+            msg.append (" na liniji ").append(((Symbol)info).left);
+        log.error(msg.toString());
+    }
+:}
+
+init with {:
+	errorDetected = false;
+:}
+
+scan with {:
+	Symbol s = this.getScanner().next_token();
+	if (s != null && s.value != null) 
+		log.info(s.toString() + " " + s.value.toString());
+	return s;
+:}
+
+/* KEYWORDS */
+terminal PROG, BREAK, ENUM, CLASS, ABSTRACT, ELSE, CONST, IF, NEW, PRINT;
+terminal READ, RETURN, VOID, EXTENDS, CONTINUE, FOR, LENGTH, SWITCH, CASE;
+/* OPERATORS */
+terminal INC, DEC, PLUS, MINUS, MUL, DIV, MOD, AND, OR, EQUAL;
+terminal RELEQ, RELNEQ, RELG, RELGE, RELL, RELLE;
+/* BRACKETS */
+terminal LPAREN, RPAREN, LBRACE, RBRACE, LSQUARE, RSQUARE;
+/* SPECIAL SIGNS */
+terminal QMARK, COLON, SEMI, COMMA, DOT;
+
+
+terminal Boolean BOOL;
+terminal char CHAR;
+terminal String IDENT;
+terminal Integer NUMBER;
+
+nonterminal GlobalDecl, GlobalDeclList, SingleGlobalDecl;
+nonterminal VarDeclList, VarDecl, SingleVarDecl, MultipleVarDecl;
+nonterminal ConstDeclList, ConstDecl, SingleConstDecl;
+nonterminal EnumDeclList;
+nonterminal MethodDeclList, MethodDecl ;
+nonterminal FormPars, FormParsList, SingleFormPar;
+nonterminal StatementList;
+nonterminal StatementContinue, StatementBreak;
+nonterminal ClassName, ClassOptionalMethods;
+nonterminal AbstractClassOptionalMethods;
+nonterminal SingleAbsClassMethod, AbsClassMethodList, SingleAbstractMethodDecl;
+nonterminal DesignatorStatement;
+nonterminal Addop, Mulop;
+nonterminal StatementReturn;
+nonterminal StatementRead, StatementPrint, StatementIf, StatementSwitch, StatementFor;
+nonterminal ForInit, ForCond, ForAfter;
+nonterminal SwitchCaseList, SingleCase;
+
+nonterminal rs.etf.pp1.symboltable.concepts.Obj Relop, SingleStatement, MethodReturn, Designator, MethodName, SingleMethodDecl, ProgName, Program, EnumName, EnumDecl, ClassDecl, AbstractClassDecl, ClassExtends;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj CondTermList, CondFactList, Condition, CondTerm, CondFact, Term, Factor, Expr, ExprTernary, ExprArithmetic, Type, ConstValue, SingleEnumDecl, OptionalSquares;
+nonterminal java.util.ArrayList ActParsList, ActPars;
+precedence left ELSE;
+
+Program ::= (Program) PROG ProgName:p GlobalDecl LBRACE MethodDecl RBRACE;
+ProgName ::= (ProgName) IDENT:progName;
+
+GlobalDecl ::= (GlobalDecl) GlobalDeclList;
+GlobalDeclList ::= (ListGlobalDeclList) SingleGlobalDecl GlobalDeclList 
+			|
+			(EmptyGlobalDeclList) /* epsilon */
+			;
+SingleGlobalDecl ::= (VarSingleGlobalDecl) VarDecl 
+			|	
+			(ConstSingleGlobalDecl) ConstDecl
+			|
+			(EnumSingleGlobalDecl) EnumDecl
+			|
+			(ClassSingleGlobalDecl) ClassDecl
+			|
+			(AbstractClassSingleGlobalDecl) AbstractClassDecl
+			;
+/* CONST */
+ConstDecl ::= (ConstDecl) CONST Type ConstDeclList SEMI;
+ConstDeclList ::= (ListConstDeclList) SingleConstDecl COMMA ConstDeclList
+			|
+			(SingleConstDeclList) SingleConstDecl
+			;
+SingleConstDecl ::= (SingleConstDecl) IDENT:constName EQUAL ConstValue;
+ConstValue ::= (NumberConstValue) NUMBER:numberValue
+			| 	
+			(CharConstValue) CHAR:charValue
+			|
+			(BoolConstValue) BOOL:boolValue
+			;
+/* VAR */
+VarDecl ::= (NoErrorVarDecl) Type VarDeclList SEMI
+			|
+			(ErrorVarDeclComma) error COMMA:ec
+			{: parser.report_error("\nGRESKA DEF. PROMENLJIVE/KONSTANTE; Oporavak od greske do , u liniji " + ecleft, null); :}
+			|
+			(ErrorVarDeclSemi) error SEMI:es
+			{: parser.report_error("\nGRESKA DEF. PROMENLJIVE/KONSTANTE/POLJA; oporavak od greske do ; u liniji " + esleft, null); :}
+			|
+			(ErrorVarDeclBrace) error RBRACE:er
+			{: parser.report_error("\nGRESKA DEF. POLJA; oporavak od greske do } u liniji " + erleft, null); :}
+			;
+VarDeclList ::= (ListVarDeclList) SingleVarDecl COMMA VarDeclList
+			| 	
+			(SingleVarDeclList) SingleVarDecl
+			;
+SingleVarDecl ::= (SingleVarDecl) IDENT:varName OptionalSquares;
+/* ENUM */
+EnumDecl ::= (EnumDecl) ENUM EnumName:en LBRACE SingleEnumDecl EnumDeclList RBRACE;
+EnumName ::= (EnumName) IDENT:enumName;
+EnumDeclList ::= (ListEnumDeclList) EnumDeclList COMMA SingleEnumDecl
+			|
+			(EmptyEnumDeclList) /* epsilon */
+			;
+SingleEnumDecl ::= (NoValueSingleEnumDecl) IDENT:constName
+			|
+			(ValueSingleEnumDecl) IDENT:constName EQUAL NUMBER:enumValue
+			;
+/* CLASS */
+ClassDecl ::= (ClassDecl) ClassName ClassExtends LBRACE MultipleVarDecl ClassOptionalMethods RBRACE;
+ClassName ::= (ClassName) CLASS IDENT:className;
+ClassOptionalMethods ::= (MethodsClassOptionalMethods) LBRACE MethodDecl RBRACE
+			|
+			(NoMethodsClassOptionalMethods) /* epsilon */
+			;
+ClassExtends ::= (ExtendsClassExtends) EXTENDS Type:extendsTypeName
+			|
+			(ErrorClassExtends) EXTENDS error:ee
+			{: parser.report_error("\nGRESKA PROSIRENJE NATKLASE; oporavak od greske do { u liniji " + eeleft, null); :}
+			|
+			(NoExtendsClassExtends) /* epsilon */
+			;
+/* ABSTRACT CLASS */
+AbstractClassDecl ::= (AbstractClassDecl) ABSTRACT ClassName ClassExtends LBRACE MultipleVarDecl AbstractClassOptionalMethods RBRACE;
+AbstractClassOptionalMethods ::= (MethodsAbstractClassOptionalMethods) LBRACE AbsClassMethodList RBRACE
+			|
+			(NoMethodsAbstractClassOptionalMethods) /* epsilon */
+			;
+AbsClassMethodList ::= (ListAbsClassMethodList) AbsClassMethodList SingleAbsClassMethod
+			|
+			(EmptyAbsClassMethodList) /* epsilon */
+			;
+SingleAbsClassMethod ::= (MethodSingleAbsClassMethod) SingleMethodDecl | (AbstractMethodSingleAbsClassMethod) SingleAbstractMethodDecl;
+SingleAbstractMethodDecl ::= (SingleAbstractMethodDecl) ABSTRACT MethodReturn IDENT LPAREN FormPars RPAREN SEMI;
+
+/* METHOD */
+MethodDecl ::= (MethodDecl) MethodDeclList;
+MethodDeclList ::= (ListMethodDeclList) MethodDeclList SingleMethodDecl
+			| 
+			(EmptyMethodDeclList) /* epsilon */
+			;
+SingleMethodDecl ::= (SingleMethodDecl) MethodReturn MethodName LPAREN FormPars RPAREN MultipleVarDecl LBRACE StatementList RBRACE;
+MethodName ::= (MethodName) IDENT:methodName;
+MultipleVarDecl ::= (ListMultipleVarDecl) MultipleVarDecl VarDecl
+				| 
+				(EmptyMultipleVarDecl) /* epsilon */
+				;
+MethodReturn ::= (TypeMethodReturn) Type | (NoTypeMethodReturn) VOID;
+
+/* FORMPARS */
+FormPars ::= (ListFormPars) FormParsList
+			|
+			(EmptyFormPars) /* epsilon */
+			;
+FormParsList ::= (ListFormParsList) SingleFormPar COMMA FormParsList
+			|
+			(ErrorFormParsListComma) error:ec {: parser.report_error("\nGRESKA DEKL. FORM. PARAM.; oporavak od greske do , u liniji " + ecleft, null); :} COMMA FormParsList
+			|
+			(ErrorFormParsListBrace) error:eb 
+			{: parser.report_error("\nGRESKA DEKL. FORM. PARAM.; oporavak od greske do ) u liniji " + ebleft, null); :}
+			|
+			(SingleFormParsList) SingleFormPar
+			;
+SingleFormPar ::= (SingleFormPar) Type IDENT:paramName OptionalSquares;
+
+/* TYPE */
+Type ::= (Type) IDENT:typeName;
+
+StatementList ::= (ListStatementList) StatementList SingleStatement
+			|
+			(EmptyStatementList) /* epsilon */
+			;
+SingleStatement ::= (DesignatorSingleStatement) DesignatorStatement SEMI
+			|
+			(ErrorSingleStatementSEMI) error SEMI:e
+			{: parser.report_error("\nGRESKA DODELA VREDNOSTI; oporavak od greske do ; u liniji " + eleft, null); :}
+			|
+			(IfSingleStatement) StatementIf
+			|
+			(BreakSingleStatement) StatementBreak
+			|
+			(ContinueSingleStatement) StatementContinue
+			|
+			(ReturnSingleStatement) StatementReturn
+			|
+			(ReadSingleStatement) StatementRead
+			|
+			(PrintSingleStatement) StatementPrint
+			|
+			(SwitchSingleStatement) StatementSwitch
+			|
+			(ForSingleStatement) StatementFor
+			| 
+			(ListSingleStatement) LBRACE StatementList RBRACE
+			;
+
+DesignatorStatement ::= (EqualDesignatorStatement) Designator EQUAL Expr
+			|
+			(CallDesignatorStatement) Designator LPAREN ActPars RPAREN
+			|
+			(IncDesignatorStatement) Designator INC
+			|
+			(DecDesignatorStatement) Designator DEC
+			;
+
+			
+StatementIf ::= (IfStatementIf) IF LPAREN Condition RPAREN SingleStatement
+			|
+			(ElseStatementIf) IF LPAREN Condition RPAREN SingleStatement ELSE SingleStatement
+			| 
+			(ErrorStatementIfBrace) IF LPAREN:eif error {: parser.report_error("\nGRESKA LOGICKI IZRAZ UNUTAR IF; oporavak od greske do ) u liniji " + eifleft, null); :} RPAREN
+			;
+StatementBreak ::= (StatementBreak) BREAK SEMI;
+
+StatementContinue ::= (StatementContinue) CONTINUE SEMI;
+
+StatementReturn ::= (NoExprStatementReturn) RETURN SEMI
+			|
+			(ExprStatementReturn) RETURN Expr SEMI;
+StatementRead ::= (StatementRead) READ LPAREN Designator RPAREN SEMI;
+StatementPrint ::= (ExprStatementPrint) PRINT LPAREN Expr RPAREN SEMI
+			|
+			(ExprCommaNumberStatementPrint) PRINT LPAREN Expr COMMA NUMBER RPAREN SEMI
+			;
+			
+StatementSwitch ::= (StatementSwitch) SWITCH LPAREN Expr RPAREN LBRACE SwitchCaseList RBRACE;
+SwitchCaseList ::= (ListSwitchCaseList) SwitchCaseList SingleCase
+			|
+			(EmptySwitchCaseList) /* epsilon */
+			;
+SingleCase ::= (SingleCase) CASE NUMBER COLON StatementList;
+
+StatementFor ::= (StatementFor) FOR LPAREN ForInit SEMI ForCond SEMI ForAfter RPAREN SingleStatement;
+ForInit ::= (YesForInit) DesignatorStatement | (NoForInit) /* epsilon */;
+ForCond ::= (YesForCond) Condition | (NoForCond) /* epsilon */;
+ForAfter ::= (YesForAfter) DesignatorStatement | (NoForAfter) /* epsilon */;
+
+
+			
+ActPars ::= (ListActPars) ActParsList | (EmptyActPars)/* epsilon */;
+
+ActParsList ::= (ListActParsList) ActParsList COMMA Expr
+			|
+			(SingleActParsList) Expr
+			;
+CondFact ::= (NoRelopCondFact) ExprArithmetic
+			|
+			(RelopCondFact) ExprArithmetic Relop ExprArithmetic
+			;
+Condition ::= (Condition) CondTermList;
+CondTermList ::= (ListCondTermList) CondTermList OR CondTerm
+			|
+			(SingleCondTermList) CondTerm
+			;
+CondTerm ::= (CondTerm) CondFactList;
+CondFactList ::= (ListCondFactList) CondFact AND CondFactList
+			|
+			(SingleCondFactList) CondFact
+			;
+/* EXPR */
+Expr ::= (TernExpr) ExprTernary
+			| 
+			(ArithExpr) ExprArithmetic
+			;
+ExprArithmetic ::= (TermExprArithmetic) Term
+			|
+			(MinusTermExprArithmetic) MINUS Term
+			|
+			(ListTermExprArithmetic) ExprArithmetic Addop Term
+			;
+ExprTernary ::= (ExprTernary) Condition QMARK Expr COLON Expr;
+/* TERM */
+Term ::= (SingleFactorTerm) Factor | (ListFactorTerm) Term Mulop Factor;
+/* FACTOR */
+Factor ::= 	(DesignatorFactor) Designator
+			|
+			(CallFactor) Designator LPAREN ActPars RPAREN
+			|
+			(NumberFactor) NUMBER
+			|
+			(CharFactor) CHAR
+			|
+			(BoolFactor) BOOL
+			|
+			(NewFactorArray) NEW Type LSQUARE Expr RSQUARE
+			|
+			(NewFactor) NEW Type
+			|
+			(ParentsFactor) LPAREN Expr RPAREN 
+			;
+
+Designator ::= (IdentDesignator) IDENT:designatorName
+			|
+			(DotIdentDesignator) Designator DOT IDENT:fieldName
+			|
+			(DotLengthDesignator) Designator DOT LENGTH
+			|
+			(IndexDesignator) Designator LSQUARE Expr RSQUARE
+			;
+			
+Relop ::= (EQRelop) RELEQ | (NEQRelop) RELNEQ | (GRelop) RELG | (GERelop) RELGE | (LRelop)RELL | (LERelop) RELLE;
+Addop ::= (PlusAddop) PLUS | (MinusAddop) MINUS;
+Mulop ::= (MulMulop) MUL | (DivMulop) DIV | (ModMulop) MOD;
+
+OptionalSquares ::= (YesOptionalSquares) LSQUARE RSQUARE | (NoOptionalSquares)/* epsilon */;

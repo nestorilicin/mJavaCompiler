@@ -1,0 +1,56 @@
+//Test 302
+
+program test302
+
+// CONST greske
+const int jedan = 1;
+const nepostoji grs = 10;
+const int jedan = 2; // dupla deklaracija
+const int karakter = 'c'; // pogresan tip
+const char broj = 2; // pogresan tip
+const bool tacno = 1; // pogresan tip
+
+char slovo;
+int x;
+int x; // dupla deklaracija
+nepostoji pera;
+int niz[];
+
+enum Broj { NULA, JEDAN, PET=5, DESET=10}
+enum Broj { NULA, JEDAN, PET=5, DESET=10} // dupla definicija enum
+
+// testovi za klase
+
+
+{
+	// globalne funkcije nemaju implicitan parametar this
+	int sum(int z, int d)
+	{	
+		niz = 5;		// destinacija dodele nije promenljiva, polje ili element niza
+		niz++;
+		niz--;
+		slovo++;
+		slovo--;
+		if(slovo) {}
+		return z + d + this;
+	}
+	int sum(int z){ // dupla deklaracija
+	}
+	int main()	// metod main nije void
+	{
+		slovo++;
+	}
+	
+	int inkrement(int a, int inc) int pom; 
+	{
+		if(inc == jedan) pom = 1;
+		else if(inc == 2) pom = a;
+		return sum(a,pom);
+	}
+	
+	bool verify() {
+		print('v');
+		return false;
+	}	
+	
+}

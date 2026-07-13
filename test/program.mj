@@ -1,0 +1,47 @@
+program MJProgram
+const int tabledestination = 50;
+int a;
+int a[], b, c[];
+const int tablesize = 10+;
+abstract class dobra extends klasa { 
+	int a, b;
+	{
+		void a(int a+, int b) {} // Error: recovery until comma.
+		void povracaj(){ return; }
+		abstract int gepek(int idx);
+		abstract int gepek2(int idafdsa);
+	}
+}
+enum Broj { NULA, JEDAN, TRI = 3, PET = 5}
+{
+	void ej(int k)
+	
+		int a;
+		int b;
+	{
+		break;
+		continue;
+		break;
+		read(a);
+		{
+			break;
+			continue;{{} a = 3;} 
+		}
+		for(i = 0; i < tableSize; i++) {
+			val.putp(0, i);
+			val.putn(0, i);
+			a = b+;
+			a.a+;
+		}
+		print(jajeee);
+		print(jaje, 4);
+		switch (arr[i] - 1) {
+		case 0: continue;
+		case 1: print('1'); break;
+		case 2: print('2'); break;
+		print(arr[i]);	
+		}
+	}
+	void a(int a, int b+) {} 	
+	
+}

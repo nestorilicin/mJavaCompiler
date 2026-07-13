@@ -1,0 +1,46 @@
+// Test301
+
+program test301
+
+
+
+const int nula = 0 , jedan = 1;
+const int pet = 5;
+const bool tacno = true, netacno = false;
+enum Broj { NULA, JEDAN, PET=5, SEST,  DESET=10}
+enum DAN { PONEDELJAK = 1, UTORAK, SREDA, PETAK = 5}
+int niz[];
+char test;
+
+int a;
+
+char test2[];
+int niz2[];
+bool mozda;
+
+char kuracpalac;
+	
+{
+	
+	void main()	
+		int bodovi;
+		int temp;
+		Broj nula, jedan;
+		bool bt;
+	{
+			return;
+	}
+	
+	int picka()
+		int bodovi;
+		int temp;
+		Broj nula, jedan;
+		bool bt;
+	{
+	if(niz  != niz2 && niz == niz2) return 1;
+	else return 2;}
+	
+
+}
+
+
