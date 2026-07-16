@@ -1,7 +1,6 @@
 package rs.ac.bg.etf.pp1;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -27,10 +26,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	// CONST
 	private Struct currentConstType;
 	private int constValue;
-	// ENUM
-	private int prevEnumVal = 0;
-	private Obj enumObj;
-	private boolean inEnum = false;
+	
 	// CLASS
 	private Obj currentClass = null;
 	// METHOD
@@ -39,14 +35,19 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	private boolean mainFlag = false;
 	// ACTPARS
 	private List<Obj> currentParams = null;
-	// switch
-	private boolean inSwitch = false;
+	
 	// for
 	private boolean inFor = false;
 
 	private boolean isInt(Obj obj) {
-		return obj.getType().getKind() == Struct.Int || (obj.getType().getKind() == Struct.Enum
-				&& (obj.getKind() == Obj.Fld || obj.getKind() == Obj.Var || obj.getKind() == Obj.Elem));
+		return obj.getType().getKind() == Struct.Int;
+		
+		// ovo je staro sa enumom
+		/*
+		 * return obj.getType().getKind() == Struct.Int || (obj.getType().getKind() ==
+		 * Struct.Enum && (obj.getKind() == Obj.Fld || obj.getKind() == Obj.Var ||
+		 * obj.getKind() == Obj.Elem));
+		 */
 	}
 
 	private void checkCall(Obj method, SyntaxNode lin) {
@@ -197,47 +198,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		// currentType = null;
 	}
 
-	// ENUM
-	public void visit(EnumName enumName) {
-		if (Tab.find(enumName.getEnumName()) != Tab.noObj) {
-			report_error("Simbol sa imenom " + enumName.getEnumName() + " vec definisan ", enumName);
-			return;
-		}
-		enumObj = Tab.insert(Obj.Type, enumName.getEnumName(), new Struct(Struct.Enum));
-		Tab.openScope();
-		// report_info("Zapocet enum scope", enumName);
-		report_info("DEFINICIJA novi enum tip" + enumName.getEnumName(), enumName);
-		inEnum = true;
-	}
-
-	public void visit(EnumDecl enumDecl) {
-		Tab.chainLocalSymbols(enumObj.getType());
-		Tab.closeScope();
-		// report_info("Zavrsen enum scope ", enumDecl);
-		// report_info("Enum: " + enumDecl.getEnumName().getEnumName(), null);
-		inEnum = false;
-	}
-
-	public void visit(NoValueSingleEnumDecl singleEnumDecl) {
-		if (inEnum) {
-			Obj newMember = Tab.insert(Obj.Con, singleEnumDecl.getConstName(), Tab.intType);
-			newMember.setAdr(prevEnumVal++);
-			// enumObj.getType().getMembersTable().insertKey(newMember);
-			report_info("\tDEF simbolicka konstanta " + newMember.getName() + " vrednost " + newMember.getAdr(), null);
-		}
-
-	}
-
-	public void visit(ValueSingleEnumDecl singleEnumDecl) {
-		if (inEnum) {
-			Obj newMember = Tab.insert(Obj.Con, singleEnumDecl.getConstName(), Tab.intType);
-			newMember.setAdr(singleEnumDecl.getEnumValue());
-			prevEnumVal = newMember.getAdr() + 1;
-			// enumObj.getType().getMembersTable().insertKey(newMember);
-			report_info("\tDEF simbolicka konstanta " + newMember.getName() + " vrednost " + newMember.getAdr(), null);
-		}
-
-	}
+	
 
 	// CLASS
 	public void visit(ClassName className) {
@@ -266,10 +227,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			report_error("Roditeljska klasa " + parentClassName + " je primitivnog tipa", classExtends);
 			return;
 		}
-		if (parentClassType.getKind() == Struct.Enum) {
-			report_error("Roditeljska klasa " + parentClassName + " je tipa enum", classExtends);
-			return;
-		}
+		/*
+		 * if (parentClassType.getKind() == Struct.Enum) {
+		 * report_error("Roditeljska klasa " + parentClassName + " je tipa enum",
+		 * classExtends); return; }
+		 */
 		currentClass.getType().setElementType(parentClassType);
 	}
 
@@ -361,6 +323,10 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	public void visit(EqualDesignatorStatement design) {
 		Obj obj = design.getDesignator().obj;
 		if (obj.getKind() == Obj.Elem || obj.getKind() == Obj.Fld || obj.getKind() == Obj.Var) {
+			if(!design.getExpr().obj.getType().assignableTo(obj.getType())) {
+				report_error("Nedodeljiv tip u dodeli vrednosti", design);
+			}
+			
 			// TODO klase
 		} else {
 			report_error("Destinacija dodele nije promenljiva, element niza ili polje unutar objekta", design);
@@ -408,8 +374,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 
 	// BREAK statement
 	public void visit(StatementBreak stmnt) {
-		if (!inFor && !inSwitch) {
-			report_error("break se moze naci samo u for petlji ili switch-u", stmnt);
+		if (!inFor) { // && !inSwitch
+			report_error("break se moze naci samo u for petlji", stmnt); // ili switch-u
 		}
 	}
 
@@ -469,21 +435,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		}
 	}
 
-	// SWITCH statement
-	public void visit(ListSwitchCaseList sw_case) {
-		inSwitch = true;
-	}
-
-	public void visit(EmptySwitchCaseList sw_case) {
-	}
-
-	public void visit(StatementSwitch stmnt) {
-		Obj obj = stmnt.getExpr().obj;
-		if (!isInt(obj)) {
-			report_error("Izraz u switch konstrukciji nije celobrojna vrednost", stmnt);
-		}
-		inSwitch = false;
-	}
 
 	// FOR statement
 	public void visit(StatementFor stmnt) {
@@ -633,8 +584,16 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		expr.obj = new Obj(Obj.Var, "expr", Tab.intType);
 	}
 
+	public void visit(ExprTernary expr) {
+		if(!expr.getExpr().obj.getType().compatibleWith(expr.getExpr1().obj.getType())) {
+			report_error("Vrednosti u ternarnome operatoru nisu istog tipa", expr);
+			expr.obj = Tab.noObj;
+		}
+		expr.obj = expr.getExpr().obj;
+	}
+	
 	public void visit(TernExpr expr) {
-		expr.obj = expr.getExprTernary().getCondition().obj;
+		expr.obj = expr.getExprTernary().obj;
 	}
 
 	public void visit(ArithExpr expr) {
@@ -697,7 +656,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			factor.obj = Tab.noObj;
 			return;
 		}
-		factor.getExpr().obj = new Obj(Obj.Var, "array", new Struct(Struct.Array, currentType.getType()));
+		factor.obj = new Obj(Obj.Var, "array", new Struct(Struct.Array, currentType.getType()));
 		report_info("Inicijalizovan niz " + factor.getType(), factor);
 		currentType = null;
 	}
@@ -732,21 +691,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 
 	public void visit(DotIdentDesignator design) {
 		Obj obj = design.getDesignator().obj;
-		if (obj.getType().getKind() == Struct.Enum) {
-			Collection<Obj> enumValues = obj.getType().getMembers();
-			for (Obj o : enumValues) {
-				if (o.getName().equals(design.getFieldName())) {
-					design.obj = o;
-					report_info("UPOTREBA simbolicka konstanta " + obj.getName() + "." + o.getName(), design);
-					return;
-				}
-			}
-		}
 		if (obj.getType().getKind() == Struct.Class) {
 			System.out.println("OBRADA KLASE");
 			// TODO
 		}
-		report_error("Pristup polju identifikatora koji nije klasa ili enum", design);
+		report_error("Pristup polju identifikatora koji nije klasa", design); // ili enum
 	}
 
 	public void visit(DotLengthDesignator design) {
@@ -757,11 +706,14 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			return;
 		}
 		design.obj = new Obj(Obj.Con, "length", Tab.intType);
-		report_info("UPOTREBA length za niza", design);
+		report_info("UPOTREBA length za niz", design);
 	}
-
+	
+	public void visit(DesignatorArray arr) {
+	    arr.obj = arr.getDesignator().obj;
+	}
 	public void visit(IndexDesignator design) {
-		Obj obj = design.getDesignator().obj;
+		Obj obj = design.getDesignatorArray().obj;
 		if (obj.getType().getKind() != Struct.Array) {
 			report_error("Pokusaj indeksiranja nad necemu sto nije niz", design);
 			design.obj = Tab.noObj;
@@ -776,6 +728,17 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		report_info("UPOTREBA element niza ", design);
 	}
 
+	// FIND ANY
+	public void visit(FindAnyDesignatorStatement stmt) {
+		if(stmt.getDesignator().obj.getType() != boolStruct) {
+			report_error("izraz sa findAny moze da se dodeli samo bool tipu", stmt);
+			return;
+		}
+		if(stmt.getDesignator1().obj.getType().getKind() != Struct.Array) {
+			report_error("findAny moze da se pozove samo nad tipom niza", stmt);
+			return;
+		}
+	}
 	public boolean passed() {
 		return !errorDetected;
 	}

@@ -38,7 +38,7 @@ import java_cup.runtime.Symbol;
 /* KEYWORDS */
 "program"	{ return new_symbol(sym.PROG, yytext()); 		}
 "break"		{ return new_symbol(sym.BREAK, yytext()); 		}
-"enum"		{ return new_symbol(sym.ENUM, yytext()); 		}
+																/* "enum"		{ return new_symbol(sym.ENUM, yytext()); 		} */
 "class"		{ return new_symbol(sym.CLASS, yytext()); 		}
 "abstract" 	{ return new_symbol(sym.ABSTRACT, yytext()); 	}
 "else" 		{ return new_symbol(sym.ELSE, yytext()); 		}
@@ -53,8 +53,9 @@ import java_cup.runtime.Symbol;
 "continue"	{ return new_symbol(sym.CONTINUE, yytext()); 	}
 "for"		{ return new_symbol(sym.FOR, yytext()); 		}
 "length" 	{ return new_symbol(sym.LENGTH, yytext()); 		}
-"switch" 	{ return new_symbol(sym.SWITCH, yytext()); 		}
-"case" 		{ return new_symbol(sym.CASE, yytext()); 		}
+"findAny" 	{ return new_symbol(sym.FINDANY, yytext());		}
+																/* "switch" 	{ return new_symbol(sym.SWITCH, yytext()); 		} */
+																/* "case" 		{ return new_symbol(sym.CASE, yytext()); 		} */
 
 /* COMMENTS */
 "//"	{yybegin(COMMENT);}

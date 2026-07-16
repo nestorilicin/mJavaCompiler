@@ -44,8 +44,9 @@ scan with {:
 :}
 
 /* KEYWORDS */
-terminal PROG, BREAK, ENUM, CLASS, ABSTRACT, ELSE, CONST, IF, NEW, PRINT;
-terminal READ, RETURN, VOID, EXTENDS, CONTINUE, FOR, LENGTH, SWITCH, CASE;
+
+terminal PROG, BREAK, CLASS, ABSTRACT, ELSE, CONST, IF, NEW, PRINT;
+terminal READ, RETURN, VOID, EXTENDS, CONTINUE, FOR, LENGTH;
 /* OPERATORS */
 terminal INC, DEC, PLUS, MINUS, MUL, DIV, MOD, AND, OR, EQUAL;
 terminal RELEQ, RELNEQ, RELG, RELGE, RELL, RELLE;
@@ -54,6 +55,8 @@ terminal LPAREN, RPAREN, LBRACE, RBRACE, LSQUARE, RSQUARE;
 /* SPECIAL SIGNS */
 terminal QMARK, COLON, SEMI, COMMA, DOT;
 
+/* findAny */
+terminal FINDANY;
 
 terminal Boolean BOOL;
 terminal char CHAR;
@@ -70,7 +73,7 @@ nonterminal MultipleVarDecl MultipleVarDecl;
 nonterminal ConstDeclList ConstDeclList;
 nonterminal ConstDecl ConstDecl;
 nonterminal SingleConstDecl SingleConstDecl;
-nonterminal EnumDeclList EnumDeclList;
+
 nonterminal MethodDeclList MethodDeclList;
 nonterminal MethodDecl MethodDecl ;
 nonterminal FormPars FormPars;
@@ -92,17 +95,17 @@ nonterminal StatementReturn StatementReturn;
 nonterminal StatementRead StatementRead;
 nonterminal StatementPrint StatementPrint;
 nonterminal StatementIf StatementIf;
-nonterminal StatementSwitch StatementSwitch;
 nonterminal StatementFor StatementFor;
 nonterminal ForInit ForInit;
 nonterminal ForCond ForCond;
 nonterminal ForAfter ForAfter;
-nonterminal SwitchCaseList SwitchCaseList;
-nonterminal SingleCase SingleCase;
+nonterminal TernStart TernStart;
+nonterminal TernMid TernMid;
 
-nonterminal rs.etf.pp1.symboltable.concepts.Obj Relop, SingleStatement, MethodReturn, Designator, MethodName, SingleMethodDecl, ProgName, Program, EnumName, EnumDecl, ClassDecl, AbstractClassDecl, ClassExtends;
-nonterminal rs.etf.pp1.symboltable.concepts.Obj CondTermList, CondFactList, Condition, CondTerm, CondFact, Term, Factor, Expr, ExprTernary, ExprArithmetic, Type, ConstValue, SingleEnumDecl, OptionalSquares;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj Relop, SingleStatement, MethodReturn, Designator, MethodName, SingleMethodDecl, ProgName, Program, ClassDecl, AbstractClassDecl, ClassExtends;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj CondTermList, CondFactList, Condition, CondTerm, CondFact, Term, Factor, Expr, ExprTernary, ExprArithmetic, Type, ConstValue, OptionalSquares, DesignatorArray;
 nonterminal java.util.ArrayList ActParsList, ActPars;
+
 precedence left ELSE;
 
 Program ::= (Program) PROG ProgName:p GlobalDecl:G1 LBRACE MethodDecl:M2 RBRACE {: RESULT=new Program(p, G1, M2); RESULT.setLine(pleft); :};
@@ -117,8 +120,7 @@ SingleGlobalDecl ::= (VarSingleGlobalDecl) VarDecl:V1 {: RESULT=new VarSingleGlo
 			|	
 			(ConstSingleGlobalDecl) ConstDecl:C1 {: RESULT=new ConstSingleGlobalDecl(C1); RESULT.setLine(C1left); :}
 			|
-			(EnumSingleGlobalDecl) EnumDecl:E1 {: RESULT=new EnumSingleGlobalDecl(E1); RESULT.setLine(E1left); :}
-			|
+																					/* (EnumSingleGlobalDecl) EnumDecl | */
 			(ClassSingleGlobalDecl) ClassDecl:C1 {: RESULT=new ClassSingleGlobalDecl(C1); RESULT.setLine(C1left); :}
 			|
 			(AbstractClassSingleGlobalDecl) AbstractClassDecl:A1 {: RESULT=new AbstractClassSingleGlobalDecl(A1); RESULT.setLine(A1left); :}
@@ -153,17 +155,7 @@ VarDeclList ::= (ListVarDeclList) SingleVarDecl:S1 COMMA VarDeclList:V2 {: RESUL
 			(SingleVarDeclList) SingleVarDecl:S1 {: RESULT=new SingleVarDeclList(S1); RESULT.setLine(S1left); :}
 			;
 SingleVarDecl ::= (SingleVarDecl) IDENT:varName OptionalSquares:O1 {: RESULT=new SingleVarDecl(varName, O1); RESULT.setLine(varNameleft); :};
-/* ENUM */
-EnumDecl ::= (EnumDecl) ENUM EnumName:en LBRACE SingleEnumDecl:S1 EnumDeclList:E2 RBRACE {: RESULT=new EnumDecl(en, S1, E2); RESULT.setLine(enleft); :};
-EnumName ::= (EnumName) IDENT:enumName {: RESULT=new EnumName(enumName); RESULT.setLine(enumNameleft); :};
-EnumDeclList ::= (ListEnumDeclList) EnumDeclList:E1 COMMA SingleEnumDecl:S2 {: RESULT=new ListEnumDeclList(E1, S2); RESULT.setLine(E1left); :}
-			|
-			(EmptyEnumDeclList) {: RESULT=new EmptyEnumDeclList(); :} /* epsilon */
-			;
-SingleEnumDecl ::= (NoValueSingleEnumDecl) IDENT:constName {: RESULT=new NoValueSingleEnumDecl(constName); RESULT.setLine(constNameleft); :}
-			|
-			(ValueSingleEnumDecl) IDENT:constName EQUAL NUMBER:enumValue {: RESULT=new ValueSingleEnumDecl(constName, enumValue); RESULT.setLine(constNameleft); :}
-			;
+
 /* CLASS */
 ClassDecl ::= (ClassDecl) ClassName:C1 ClassExtends:C2 LBRACE MultipleVarDecl:M3 ClassOptionalMethods:C4 RBRACE {: RESULT=new ClassDecl(C1, C2, M3, C4); RESULT.setLine(C1left); :};
 ClassName ::= (ClassName) CLASS IDENT:className {: RESULT=new ClassName(className); RESULT.setLine(classNameleft); :};
@@ -245,8 +237,7 @@ SingleStatement ::= (DesignatorSingleStatement) DesignatorStatement:D1 SEMI {: R
 			|
 			(PrintSingleStatement) StatementPrint:S1 {: RESULT=new PrintSingleStatement(S1); RESULT.setLine(S1left); :}
 			|
-			(SwitchSingleStatement) StatementSwitch:S1 {: RESULT=new SwitchSingleStatement(S1); RESULT.setLine(S1left); :}
-			|
+																/* (SwitchSingleStatement) StatementSwitch | */
 			(ForSingleStatement) StatementFor:S1 {: RESULT=new ForSingleStatement(S1); RESULT.setLine(S1left); :}
 			| 
 			(ListSingleStatement) LBRACE StatementList:S1 RBRACE {: RESULT=new ListSingleStatement(S1); RESULT.setLine(S1left); :}
@@ -259,6 +250,8 @@ DesignatorStatement ::= (EqualDesignatorStatement) Designator:D1 EQUAL Expr:E2 {
 			(IncDesignatorStatement) Designator:D1 INC {: RESULT=new IncDesignatorStatement(D1); RESULT.setLine(D1left); :}
 			|
 			(DecDesignatorStatement) Designator:D1 DEC {: RESULT=new DecDesignatorStatement(D1); RESULT.setLine(D1left); :}
+			|
+			(FindAnyDesignatorStatement) Designator:D1 EQUAL Designator:D2 DOT FINDANY LPAREN Expr:E3 RPAREN {: RESULT=new FindAnyDesignatorStatement(D1, D2, E3); RESULT.setLine(D1left); :}
 			;
 
 			
@@ -280,13 +273,7 @@ StatementPrint ::= (ExprStatementPrint) PRINT LPAREN Expr:E1 RPAREN SEMI {: RESU
 			|
 			(ExprCommaNumberStatementPrint) PRINT LPAREN Expr:E1 COMMA NUMBER:N2 RPAREN SEMI {: RESULT=new ExprCommaNumberStatementPrint(E1, N2); RESULT.setLine(E1left); :}
 			;
-			
-StatementSwitch ::= (StatementSwitch) SWITCH LPAREN Expr:E1 RPAREN LBRACE SwitchCaseList:S2 RBRACE {: RESULT=new StatementSwitch(E1, S2); RESULT.setLine(E1left); :};
-SwitchCaseList ::= (ListSwitchCaseList) SwitchCaseList:S1 SingleCase:S2 {: RESULT=new ListSwitchCaseList(S1, S2); RESULT.setLine(S1left); :}
-			|
-			(EmptySwitchCaseList) {: RESULT=new EmptySwitchCaseList(); :} /* epsilon */
-			;
-SingleCase ::= (SingleCase) CASE NUMBER:N1 COLON StatementList:S2 {: RESULT=new SingleCase(N1, S2); RESULT.setLine(N1left); :};
+
 
 StatementFor ::= (StatementFor) FOR LPAREN ForInit:F1 SEMI ForCond:F2 SEMI ForAfter:F3 RPAREN SingleStatement:S4 {: RESULT=new StatementFor(F1, F2, F3, S4); RESULT.setLine(F1left); :};
 ForInit ::= (YesForInit) DesignatorStatement:D1 {: RESULT=new YesForInit(D1); RESULT.setLine(D1left); :} | (NoForInit) {: RESULT=new NoForInit(); :} /* epsilon */;
@@ -326,7 +313,9 @@ ExprArithmetic ::= (TermExprArithmetic) Term:T1 {: RESULT=new TermExprArithmetic
 			|
 			(ListTermExprArithmetic) ExprArithmetic:E1 Addop:A2 Term:T3 {: RESULT=new ListTermExprArithmetic(E1, A2, T3); RESULT.setLine(E1left); :}
 			;
-ExprTernary ::= (ExprTernary) Condition:C1 QMARK Expr:E2 COLON Expr:E3 {: RESULT=new ExprTernary(C1, E2, E3); RESULT.setLine(C1left); :};
+ExprTernary ::= (ExprTernary) Condition:C1 TernStart:T2 Expr:E3 TernMid:T4 Expr:E5 {: RESULT=new ExprTernary(C1, T2, E3, T4, E5); RESULT.setLine(C1left); :};
+TernStart ::= (TernStart) QMARK {: RESULT=new TernStart(); :};
+TernMid ::= (TernMid) COLON {: RESULT=new TernMid(); :};
 /* TERM */
 Term ::= (SingleFactorTerm) Factor:F1 {: RESULT=new SingleFactorTerm(F1); RESULT.setLine(F1left); :} | (ListFactorTerm) Term:T1 Mulop:M2 Factor:F3 {: RESULT=new ListFactorTerm(T1, M2, F3); RESULT.setLine(T1left); :};
 /* FACTOR */
@@ -353,11 +342,13 @@ Designator ::= (IdentDesignator) IDENT:designatorName {: RESULT=new IdentDesigna
 			|
 			(DotLengthDesignator) Designator:D1 DOT LENGTH {: RESULT=new DotLengthDesignator(D1); RESULT.setLine(D1left); :}
 			|
-			(IndexDesignator) Designator:D1 LSQUARE Expr:E2 RSQUARE {: RESULT=new IndexDesignator(D1, E2); RESULT.setLine(D1left); :}
+			(IndexDesignator) DesignatorArray:D1 Expr:E2 RSQUARE {: RESULT=new IndexDesignator(D1, E2); RESULT.setLine(D1left); :}
 			;
-			
+DesignatorArray ::= (DesignatorArray) Designator:D1 LSQUARE {: RESULT=new DesignatorArray(D1); RESULT.setLine(D1left); :};
 Relop ::= (EQRelop) RELEQ {: RESULT=new EQRelop(); :} | (NEQRelop) RELNEQ {: RESULT=new NEQRelop(); :} | (GRelop) RELG {: RESULT=new GRelop(); :} | (GERelop) RELGE {: RESULT=new GERelop(); :} | (LRelop)RELL {: RESULT=new LRelop(); :} | (LERelop) RELLE {: RESULT=new LERelop(); :};
 Addop ::= (PlusAddop) PLUS {: RESULT=new PlusAddop(); :} | (MinusAddop) MINUS {: RESULT=new MinusAddop(); :};
 Mulop ::= (MulMulop) MUL {: RESULT=new MulMulop(); :} | (DivMulop) DIV {: RESULT=new DivMulop(); :} | (ModMulop) MOD {: RESULT=new ModMulop(); :};
 
 OptionalSquares ::= (YesOptionalSquares) LSQUARE RSQUARE {: RESULT=new YesOptionalSquares(); :} | (NoOptionalSquares) {: RESULT=new NoOptionalSquares(); :}/* epsilon */;
+
+

@@ -44,8 +44,9 @@ scan with {:
 :}
 
 /* KEYWORDS */
-terminal PROG, BREAK, ENUM, CLASS, ABSTRACT, ELSE, CONST, IF, NEW, PRINT;
-terminal READ, RETURN, VOID, EXTENDS, CONTINUE, FOR, LENGTH, SWITCH, CASE;
+
+terminal PROG, BREAK, CLASS, ABSTRACT, ELSE, CONST, IF, NEW, PRINT;
+terminal READ, RETURN, VOID, EXTENDS, CONTINUE, FOR, LENGTH;
 /* OPERATORS */
 terminal INC, DEC, PLUS, MINUS, MUL, DIV, MOD, AND, OR, EQUAL;
 terminal RELEQ, RELNEQ, RELG, RELGE, RELL, RELLE;
@@ -54,6 +55,8 @@ terminal LPAREN, RPAREN, LBRACE, RBRACE, LSQUARE, RSQUARE;
 /* SPECIAL SIGNS */
 terminal QMARK, COLON, SEMI, COMMA, DOT;
 
+/* findAny */
+terminal FINDANY;
 
 terminal Boolean BOOL;
 terminal char CHAR;
@@ -63,7 +66,7 @@ terminal Integer NUMBER;
 nonterminal GlobalDecl, GlobalDeclList, SingleGlobalDecl;
 nonterminal VarDeclList, VarDecl, SingleVarDecl, MultipleVarDecl;
 nonterminal ConstDeclList, ConstDecl, SingleConstDecl;
-nonterminal EnumDeclList;
+
 nonterminal MethodDeclList, MethodDecl ;
 nonterminal FormPars, FormParsList, SingleFormPar;
 nonterminal StatementList;
@@ -74,13 +77,14 @@ nonterminal SingleAbsClassMethod, AbsClassMethodList, SingleAbstractMethodDecl;
 nonterminal DesignatorStatement;
 nonterminal Addop, Mulop;
 nonterminal StatementReturn;
-nonterminal StatementRead, StatementPrint, StatementIf, StatementSwitch, StatementFor;
+nonterminal StatementRead, StatementPrint, StatementIf, StatementFor;
 nonterminal ForInit, ForCond, ForAfter;
-nonterminal SwitchCaseList, SingleCase;
+nonterminal TernStart, TernMid;
 
-nonterminal rs.etf.pp1.symboltable.concepts.Obj Relop, SingleStatement, MethodReturn, Designator, MethodName, SingleMethodDecl, ProgName, Program, EnumName, EnumDecl, ClassDecl, AbstractClassDecl, ClassExtends;
-nonterminal rs.etf.pp1.symboltable.concepts.Obj CondTermList, CondFactList, Condition, CondTerm, CondFact, Term, Factor, Expr, ExprTernary, ExprArithmetic, Type, ConstValue, SingleEnumDecl, OptionalSquares;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj Relop, SingleStatement, MethodReturn, Designator, MethodName, SingleMethodDecl, ProgName, Program, ClassDecl, AbstractClassDecl, ClassExtends;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj CondTermList, CondFactList, Condition, CondTerm, CondFact, Term, Factor, Expr, ExprTernary, ExprArithmetic, Type, ConstValue, OptionalSquares, DesignatorArray;
 nonterminal java.util.ArrayList ActParsList, ActPars;
+
 precedence left ELSE;
 
 Program ::= (Program) PROG ProgName:p GlobalDecl LBRACE MethodDecl RBRACE;
@@ -95,8 +99,7 @@ SingleGlobalDecl ::= (VarSingleGlobalDecl) VarDecl
 			|	
 			(ConstSingleGlobalDecl) ConstDecl
 			|
-			(EnumSingleGlobalDecl) EnumDecl
-			|
+																					/* (EnumSingleGlobalDecl) EnumDecl | */
 			(ClassSingleGlobalDecl) ClassDecl
 			|
 			(AbstractClassSingleGlobalDecl) AbstractClassDecl
@@ -131,17 +134,7 @@ VarDeclList ::= (ListVarDeclList) SingleVarDecl COMMA VarDeclList
 			(SingleVarDeclList) SingleVarDecl
 			;
 SingleVarDecl ::= (SingleVarDecl) IDENT:varName OptionalSquares;
-/* ENUM */
-EnumDecl ::= (EnumDecl) ENUM EnumName:en LBRACE SingleEnumDecl EnumDeclList RBRACE;
-EnumName ::= (EnumName) IDENT:enumName;
-EnumDeclList ::= (ListEnumDeclList) EnumDeclList COMMA SingleEnumDecl
-			|
-			(EmptyEnumDeclList) /* epsilon */
-			;
-SingleEnumDecl ::= (NoValueSingleEnumDecl) IDENT:constName
-			|
-			(ValueSingleEnumDecl) IDENT:constName EQUAL NUMBER:enumValue
-			;
+
 /* CLASS */
 ClassDecl ::= (ClassDecl) ClassName ClassExtends LBRACE MultipleVarDecl ClassOptionalMethods RBRACE;
 ClassName ::= (ClassName) CLASS IDENT:className;
@@ -223,8 +216,7 @@ SingleStatement ::= (DesignatorSingleStatement) DesignatorStatement SEMI
 			|
 			(PrintSingleStatement) StatementPrint
 			|
-			(SwitchSingleStatement) StatementSwitch
-			|
+																/* (SwitchSingleStatement) StatementSwitch | */
 			(ForSingleStatement) StatementFor
 			| 
 			(ListSingleStatement) LBRACE StatementList RBRACE
@@ -237,6 +229,8 @@ DesignatorStatement ::= (EqualDesignatorStatement) Designator EQUAL Expr
 			(IncDesignatorStatement) Designator INC
 			|
 			(DecDesignatorStatement) Designator DEC
+			|
+			(FindAnyDesignatorStatement) Designator EQUAL Designator DOT FINDANY LPAREN Expr RPAREN
 			;
 
 			
@@ -258,13 +252,7 @@ StatementPrint ::= (ExprStatementPrint) PRINT LPAREN Expr RPAREN SEMI
 			|
 			(ExprCommaNumberStatementPrint) PRINT LPAREN Expr COMMA NUMBER RPAREN SEMI
 			;
-			
-StatementSwitch ::= (StatementSwitch) SWITCH LPAREN Expr RPAREN LBRACE SwitchCaseList RBRACE;
-SwitchCaseList ::= (ListSwitchCaseList) SwitchCaseList SingleCase
-			|
-			(EmptySwitchCaseList) /* epsilon */
-			;
-SingleCase ::= (SingleCase) CASE NUMBER COLON StatementList;
+
 
 StatementFor ::= (StatementFor) FOR LPAREN ForInit SEMI ForCond SEMI ForAfter RPAREN SingleStatement;
 ForInit ::= (YesForInit) DesignatorStatement | (NoForInit) /* epsilon */;
@@ -304,7 +292,9 @@ ExprArithmetic ::= (TermExprArithmetic) Term
 			|
 			(ListTermExprArithmetic) ExprArithmetic Addop Term
 			;
-ExprTernary ::= (ExprTernary) Condition QMARK Expr COLON Expr;
+ExprTernary ::= (ExprTernary) Condition TernStart Expr TernMid Expr;
+TernStart ::= (TernStart) QMARK;
+TernMid ::= (TernMid) COLON;
 /* TERM */
 Term ::= (SingleFactorTerm) Factor | (ListFactorTerm) Term Mulop Factor;
 /* FACTOR */
@@ -331,11 +321,13 @@ Designator ::= (IdentDesignator) IDENT:designatorName
 			|
 			(DotLengthDesignator) Designator DOT LENGTH
 			|
-			(IndexDesignator) Designator LSQUARE Expr RSQUARE
+			(IndexDesignator) DesignatorArray Expr RSQUARE
 			;
-			
+DesignatorArray ::= (DesignatorArray) Designator LSQUARE;
 Relop ::= (EQRelop) RELEQ | (NEQRelop) RELNEQ | (GRelop) RELG | (GERelop) RELGE | (LRelop)RELL | (LERelop) RELLE;
 Addop ::= (PlusAddop) PLUS | (MinusAddop) MINUS;
 Mulop ::= (MulMulop) MUL | (DivMulop) DIV | (ModMulop) MOD;
 
 OptionalSquares ::= (YesOptionalSquares) LSQUARE RSQUARE | (NoOptionalSquares)/* epsilon */;
+
+

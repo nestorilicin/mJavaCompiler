@@ -2,26 +2,21 @@
 
 program test301
 
-enum Broj { NULA, JEDAN, PET=5, DESET=10}
-
 const int nula = 0;
 const int jedan = 1;
 const int pet = 5;
 
 int niz[];
 char nizch[];
+
 int a;
-char kljucna;
+	
 {
 	void main()	
 		int bodovi;
 		int temp;
-		Broj nula, jedan;
 		bool bt;
 	{
-		kljucna = 'c';
-		nula = Broj.NULA;
-		jedan = Broj.JEDAN;
 		bodovi = 0;
 		bodovi++;
 		bodovi = bodovi + jedan;
@@ -64,6 +59,14 @@ char kljucna;
 		print(bt ? bodovi : bodovi + 10);
 		print(false ? bodovi + 20 : bodovi + 30);
 		print(bodovi > 10 ? '+' : '-');
+		
+		print(eol);
+		bt = niz.findAny(12);
+		print(bt); print(eol);
+		bt = niz.findAny(pet - jedan - jedan);
+		print(bt); print(eol);
+		bt = niz.findAny(bodovi);
+		print(bt); print(eol);
 		
 	}
 }
