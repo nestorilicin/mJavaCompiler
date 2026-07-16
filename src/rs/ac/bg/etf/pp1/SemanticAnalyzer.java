@@ -12,7 +12,11 @@ import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
 
 public class SemanticAnalyzer extends VisitorAdaptor {
-
+	// registri opste namene da olaksam sebi zivot
+	public Obj reg0; 
+	public Obj reg1; 
+	public Obj reg2; 
+	public Obj reg3; 
 	public SemanticAnalyzer(Struct bs) {
 		boolStruct = bs;
 	}
@@ -117,6 +121,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	public void visit(ProgName progName) {
 		progName.obj = Tab.insert(Obj.Prog, progName.getProgName(), Tab.noType);
 		Tab.openScope();
+		reg0 = Tab.insert(Obj.Var, "_reg0", Tab.intType);
+		reg1 = Tab.insert(Obj.Var, "_reg1", Tab.intType);
+		reg2 = Tab.insert(Obj.Var, "_reg2", Tab.intType);
+		reg3 = Tab.insert(Obj.Var, "_reg3", Tab.intType);
+		
 	}
 
 	public void visit(Program program) {

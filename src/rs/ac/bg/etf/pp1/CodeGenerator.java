@@ -52,7 +52,13 @@ public class CodeGenerator extends VisitorAdaptor {
 	
 	private int relopCode;
 	
-
+	private Obj reg0, reg1, reg2, reg3;
+	public CodeGenerator(Obj reg0, Obj reg1, Obj reg2, Obj reg3) {
+		this.reg0 = reg0;
+		this.reg1 = reg1;
+		this.reg2 = reg2;
+		this.reg3 = reg3;
+	}
 	// METHOD
 	public void visit(MethodName meth) {
 		if ("main".equalsIgnoreCase(meth.getMethodName())) {
@@ -291,7 +297,57 @@ public class CodeGenerator extends VisitorAdaptor {
 	// FIND ANY 
 	
 	public void visit(FindAnyDesignatorStatement stmt) {
-		// TODO
+		Obj arr = stmt.getDesignator1().obj;
+		// expr stack : value
+		
+		Code.store(reg0); // REG0 = search value
+		
+		Code.loadConst(0);
+		Code.store(reg1); // REG1 = 0   index
+		
+		Code.loadConst(0);
+		Code.store(reg2); // REG2 = 0	return value
+		
+		int loop = Code.pc;
+	
+		Code.load(reg1);
+		Code.load(arr);
+		Code.put(Code.arraylength);
+		Code.putFalseJump(Code.lt, 0);
+		int exit = Code.pc - 2;
+		
+		Code.load(arr);
+		Code.load(reg1);
+		if(arr.getType().getElemType() == Tab.charType) Code.put(Code.baload);
+		else Code.put(Code.aload);
+		
+		Code.load(reg0);
+		
+		Code.putFalseJump(Code.eq, 0);
+		int next = Code.pc - 2;
+		
+		Code.loadConst(1);
+		Code.store(reg2);
+		
+		Code.putJump(0);
+		int end = Code.pc - 2;
+		
+		Code.fixup(next);
+		
+		Code.load(reg1);
+	    Code.loadConst(1);
+	    Code.put(Code.add);
+	    Code.store(reg1);
+
+	    Code.putJump(loop);
+
+	    Code.fixup(exit);
+
+	    Code.fixup(end);
+
+	    Code.load(reg2);
+	    Code.store(stmt.getDesignator().obj);
+		
 	}
 	
 	
