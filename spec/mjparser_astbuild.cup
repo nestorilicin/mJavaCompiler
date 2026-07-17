@@ -101,6 +101,12 @@ nonterminal ForCond ForCond;
 nonterminal ForAfter ForAfter;
 nonterminal TernStart TernStart;
 nonterminal TernMid TernMid;
+nonterminal IfStart IfStart;
+nonterminal ElseStart ElseStart;
+nonterminal CallStart CallStart;
+nonterminal ForCondStart ForCondStart;
+nonterminal ForCondEnd ForCondEnd;
+nonterminal ForBodyStart ForBodyStart;
 
 nonterminal rs.etf.pp1.symboltable.concepts.Obj Relop, SingleStatement, MethodReturn, Designator, MethodName, SingleMethodDecl, ProgName, Program, ClassDecl, AbstractClassDecl, ClassExtends;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj CondTermList, CondFactList, Condition, CondTerm, CondFact, Term, Factor, Expr, ExprTernary, ExprArithmetic, Type, ConstValue, OptionalSquares, DesignatorArray;
@@ -245,7 +251,7 @@ SingleStatement ::= (DesignatorSingleStatement) DesignatorStatement:D1 SEMI {: R
 
 DesignatorStatement ::= (EqualDesignatorStatement) Designator:D1 EQUAL Expr:E2 {: RESULT=new EqualDesignatorStatement(D1, E2); RESULT.setLine(D1left); :}
 			|
-			(CallDesignatorStatement) Designator:D1 LPAREN ActPars:A2 RPAREN {: RESULT=new CallDesignatorStatement(D1, A2); RESULT.setLine(D1left); :}
+			(CallDesignatorStatement) Designator:D1 CallStart:C2 ActPars:A3 RPAREN {: RESULT=new CallDesignatorStatement(D1, C2, A3); RESULT.setLine(D1left); :}
 			|
 			(IncDesignatorStatement) Designator:D1 INC {: RESULT=new IncDesignatorStatement(D1); RESULT.setLine(D1left); :}
 			|
@@ -253,14 +259,16 @@ DesignatorStatement ::= (EqualDesignatorStatement) Designator:D1 EQUAL Expr:E2 {
 			|
 			(FindAnyDesignatorStatement) Designator:D1 EQUAL Designator:D2 DOT FINDANY LPAREN Expr:E3 RPAREN {: RESULT=new FindAnyDesignatorStatement(D1, D2, E3); RESULT.setLine(D1left); :}
 			;
-
+CallStart ::= (CallStart) LPAREN {: RESULT=new CallStart(); :};
 			
-StatementIf ::= (IfStatementIf) IF LPAREN Condition:C1 RPAREN SingleStatement:S2 {: RESULT=new IfStatementIf(C1, S2); RESULT.setLine(C1left); :}
+StatementIf ::= (IfStatementIf) IF LPAREN Condition:C1 RPAREN IfStart:I2 SingleStatement:S3 {: RESULT=new IfStatementIf(C1, I2, S3); RESULT.setLine(C1left); :}
 			|
-			(ElseStatementIf) IF LPAREN Condition:C1 RPAREN SingleStatement:S2 ELSE SingleStatement:S3 {: RESULT=new ElseStatementIf(C1, S2, S3); RESULT.setLine(C1left); :}
+			(ElseStatementIf) IF LPAREN Condition:C1 RPAREN IfStart:I2 SingleStatement:S3 ELSE ElseStart:E4 SingleStatement:S5 {: RESULT=new ElseStatementIf(C1, I2, S3, E4, S5); RESULT.setLine(C1left); :}
 			| 
 			(ErrorStatementIfBrace) IF LPAREN:eif error {: parser.report_error("\nGRESKA LOGICKI IZRAZ UNUTAR IF; oporavak od greske do ) u liniji " + eifleft, null); :} RPAREN {: RESULT=new ErrorStatementIfBrace(); :}
 			;
+IfStart ::= (IfStart) {: RESULT=new IfStart(); :} /* epsilon */;
+ElseStart ::= (ElseStart) {: RESULT=new ElseStart(); :} /* epsilon */;
 StatementBreak ::= (StatementBreak) BREAK SEMI {: RESULT=new StatementBreak(); :};
 
 StatementContinue ::= (StatementContinue) CONTINUE SEMI {: RESULT=new StatementContinue(); :};
@@ -275,13 +283,15 @@ StatementPrint ::= (ExprStatementPrint) PRINT LPAREN Expr:E1 RPAREN SEMI {: RESU
 			;
 
 
-StatementFor ::= (StatementFor) FOR LPAREN ForInit:F1 SEMI ForCond:F2 SEMI ForAfter:F3 RPAREN SingleStatement:S4 {: RESULT=new StatementFor(F1, F2, F3, S4); RESULT.setLine(F1left); :};
+StatementFor ::= (StatementFor) FOR LPAREN ForInit:F1 ForCondStart:F2 ForCond:F3 ForCondEnd:F4 ForAfter:F5 ForBodyStart:F6 SingleStatement:S7 {: RESULT=new StatementFor(F1, F2, F3, F4, F5, F6, S7); RESULT.setLine(F1left); :};
 ForInit ::= (YesForInit) DesignatorStatement:D1 {: RESULT=new YesForInit(D1); RESULT.setLine(D1left); :} | (NoForInit) {: RESULT=new NoForInit(); :} /* epsilon */;
 ForCond ::= (YesForCond) Condition:C1 {: RESULT=new YesForCond(C1); RESULT.setLine(C1left); :} | (NoForCond) {: RESULT=new NoForCond(); :} /* epsilon */;
 ForAfter ::= (YesForAfter) DesignatorStatement:D1 {: RESULT=new YesForAfter(D1); RESULT.setLine(D1left); :} | (NoForAfter) {: RESULT=new NoForAfter(); :} /* epsilon */;
 
-
-			
+ForCondStart ::= (ForCondStart) SEMI {: RESULT=new ForCondStart(); :};
+ForCondEnd ::= (ForCondEnd) SEMI {: RESULT=new ForCondEnd(); :};
+ForBodyStart ::= (ForBodyStart) RPAREN {: RESULT=new ForBodyStart(); :};		
+	
 ActPars ::= (ListActPars) ActParsList:A1 {: RESULT=new ListActPars(A1); RESULT.setLine(A1left); :} | (EmptyActPars) {: RESULT=new EmptyActPars(); :}/* epsilon */;
 
 ActParsList ::= (ListActParsList) ActParsList:A1 COMMA Expr:E2 {: RESULT=new ListActParsList(A1, E2); RESULT.setLine(A1left); :}
@@ -321,7 +331,7 @@ Term ::= (SingleFactorTerm) Factor:F1 {: RESULT=new SingleFactorTerm(F1); RESULT
 /* FACTOR */
 Factor ::= 	(DesignatorFactor) Designator:D1 {: RESULT=new DesignatorFactor(D1); RESULT.setLine(D1left); :}
 			|
-			(CallFactor) Designator:D1 LPAREN ActPars:A2 RPAREN {: RESULT=new CallFactor(D1, A2); RESULT.setLine(D1left); :}
+			(CallFactor) Designator:D1 CallStart:C2 ActPars:A3 RPAREN {: RESULT=new CallFactor(D1, C2, A3); RESULT.setLine(D1left); :}
 			|
 			(NumberFactor) NUMBER:N1 {: RESULT=new NumberFactor(N1); RESULT.setLine(N1left); :}
 			|

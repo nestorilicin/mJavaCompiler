@@ -33,7 +33,7 @@ public class MJParserTest {
 		
 		Reader br = null;
 		try {
-			String sourceFileName = "program";
+			String sourceFileName = "test301";
 			File sourceCode = new File("test/" + sourceFileName + ".mj");
 			log.info("Compiling source file: " + sourceCode.getAbsolutePath());
 
@@ -47,7 +47,7 @@ public class MJParserTest {
 			Tab.init();
 			Tab.insert(Obj.Type, "bool", boolStruct);
 			// ispis sintaksnog stabla
-			log.info(prog.toString(""));
+			//log.info(prog.toString(""));
 			log.info("===================================");
 
 			// ispis prepoznatih programskih konstrukcija

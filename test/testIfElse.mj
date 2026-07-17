@@ -1,0 +1,122 @@
+program ifTest
+
+{
+    void main()
+    {
+        // 1. if bez else (true)
+        if (1 == 1)
+            print(1);
+
+        // 2. if bez else (false)
+        if (1 != 1)
+            print(2);
+
+        // 3. if-else (true)
+        if (5 > 3)
+            print(3);
+        else
+            print(-3);
+
+        // 4. if-else (false)
+        if (5 < 3)
+            print(-4);
+        else
+            print(4);
+
+        // 5. ugnjezdeni if u THEN grani
+        if (1 == 1)
+            if (2 == 2)
+                print(5);
+            else
+                print(-5);
+
+        // 6. ugnjezdeni if u ELSE grani
+        if (1 != 1)
+            print(-6);
+        else
+            if (2 == 2)
+                print(6);
+            else
+                print(-6);
+
+        // 7. vise nivoa ugnjezdenja
+        if (1 == 1)
+            if (2 == 2)
+                if (3 == 3)
+                    print(7);
+                else
+                    print(-7);
+            else
+                print(-70);
+        else
+            print(-700);
+
+        // 8. dangling else
+        if (1 == 1)
+            if (2 != 2)
+                print(-8);
+            else
+                print(8);
+
+        // 9. oba if bez else
+        if (1 == 1)
+            if (2 == 2)
+                print(9);
+
+        // 10. spoljasnji false
+        if (1 != 1)
+            if (2 == 2)
+                print(-10);
+            else
+                print(-11);
+        else
+            print(10);
+            
+        // 11. AND ima veci prioritet od OR
+		if (1 == 1 || 2 == 2 && 3 != 3)
+		    print(11);
+		else
+		    print(-11);
+		
+		// 12. Kombinacija AND i OR
+		if (1 != 1 && 2 == 2 || 3 == 3)
+		    print(12);
+		else
+		    print(-12);
+		// 13. Sve false
+		if (1 != 1 && 2 != 2)
+		    print(-13);
+		else
+		    print(13);
+		
+		// 14. Jedan true u OR
+		if (1 != 1 || 2 == 2)
+		    print(14);
+		else
+		    print(-14);
+		
+		// 15. AND oba true
+		if (1 == 1 && 2 == 2)
+		    print(15);
+		else
+		    print(-15);
+		
+		// 16. AND jedan false
+		if (1 == 1 && 2 != 2)
+		    print(-16);
+		else
+		    print(16);
+		
+		// 17. Vise OR
+		if (1 != 1 || 2 != 2 || 3 == 3)
+		    print(17);
+		else
+		    print(-17);
+		
+		// 18. Vise AND
+		if (1 == 1 && 2 == 2 && 3 == 3)
+		    print(18);
+		else
+		    print(-18);
+    }
+}

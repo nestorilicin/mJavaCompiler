@@ -80,6 +80,9 @@ nonterminal StatementReturn;
 nonterminal StatementRead, StatementPrint, StatementIf, StatementFor;
 nonterminal ForInit, ForCond, ForAfter;
 nonterminal TernStart, TernMid;
+nonterminal IfStart, ElseStart;
+nonterminal CallStart;
+nonterminal ForCondStart, ForCondEnd, ForBodyStart;
 
 nonterminal rs.etf.pp1.symboltable.concepts.Obj Relop, SingleStatement, MethodReturn, Designator, MethodName, SingleMethodDecl, ProgName, Program, ClassDecl, AbstractClassDecl, ClassExtends;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj CondTermList, CondFactList, Condition, CondTerm, CondFact, Term, Factor, Expr, ExprTernary, ExprArithmetic, Type, ConstValue, OptionalSquares, DesignatorArray;
@@ -224,7 +227,7 @@ SingleStatement ::= (DesignatorSingleStatement) DesignatorStatement SEMI
 
 DesignatorStatement ::= (EqualDesignatorStatement) Designator EQUAL Expr
 			|
-			(CallDesignatorStatement) Designator LPAREN ActPars RPAREN
+			(CallDesignatorStatement) Designator CallStart ActPars RPAREN
 			|
 			(IncDesignatorStatement) Designator INC
 			|
@@ -232,14 +235,16 @@ DesignatorStatement ::= (EqualDesignatorStatement) Designator EQUAL Expr
 			|
 			(FindAnyDesignatorStatement) Designator EQUAL Designator DOT FINDANY LPAREN Expr RPAREN
 			;
-
+CallStart ::= (CallStart) LPAREN;
 			
-StatementIf ::= (IfStatementIf) IF LPAREN Condition RPAREN SingleStatement
+StatementIf ::= (IfStatementIf) IF LPAREN Condition RPAREN IfStart SingleStatement
 			|
-			(ElseStatementIf) IF LPAREN Condition RPAREN SingleStatement ELSE SingleStatement
+			(ElseStatementIf) IF LPAREN Condition RPAREN IfStart SingleStatement ELSE ElseStart SingleStatement
 			| 
 			(ErrorStatementIfBrace) IF LPAREN:eif error {: parser.report_error("\nGRESKA LOGICKI IZRAZ UNUTAR IF; oporavak od greske do ) u liniji " + eifleft, null); :} RPAREN
 			;
+IfStart ::= (IfStart) /* epsilon */;
+ElseStart ::= (ElseStart) /* epsilon */;
 StatementBreak ::= (StatementBreak) BREAK SEMI;
 
 StatementContinue ::= (StatementContinue) CONTINUE SEMI;
@@ -254,13 +259,15 @@ StatementPrint ::= (ExprStatementPrint) PRINT LPAREN Expr RPAREN SEMI
 			;
 
 
-StatementFor ::= (StatementFor) FOR LPAREN ForInit SEMI ForCond SEMI ForAfter RPAREN SingleStatement;
+StatementFor ::= (StatementFor) FOR LPAREN ForInit ForCondStart ForCond ForCondEnd ForAfter ForBodyStart SingleStatement;
 ForInit ::= (YesForInit) DesignatorStatement | (NoForInit) /* epsilon */;
 ForCond ::= (YesForCond) Condition | (NoForCond) /* epsilon */;
 ForAfter ::= (YesForAfter) DesignatorStatement | (NoForAfter) /* epsilon */;
 
-
-			
+ForCondStart ::= (ForCondStart) SEMI;
+ForCondEnd ::= (ForCondEnd) SEMI;
+ForBodyStart ::= (ForBodyStart) RPAREN;		
+	
 ActPars ::= (ListActPars) ActParsList | (EmptyActPars)/* epsilon */;
 
 ActParsList ::= (ListActParsList) ActParsList COMMA Expr
@@ -300,7 +307,7 @@ Term ::= (SingleFactorTerm) Factor | (ListFactorTerm) Term Mulop Factor;
 /* FACTOR */
 Factor ::= 	(DesignatorFactor) Designator
 			|
-			(CallFactor) Designator LPAREN ActPars RPAREN
+			(CallFactor) Designator CallStart ActPars RPAREN
 			|
 			(NumberFactor) NUMBER
 			|

@@ -1,43 +1,10 @@
 package rs.ac.bg.etf.pp1;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 
-import rs.ac.bg.etf.pp1.ast.BoolFactor;
-import rs.ac.bg.etf.pp1.ast.CharFactor;
-import rs.ac.bg.etf.pp1.ast.DecDesignatorStatement;
-import rs.ac.bg.etf.pp1.ast.DesignatorArray;
-import rs.ac.bg.etf.pp1.ast.DesignatorFactor;
-import rs.ac.bg.etf.pp1.ast.DivMulop;
-import rs.ac.bg.etf.pp1.ast.DotLengthDesignator;
-import rs.ac.bg.etf.pp1.ast.EQRelop;
-import rs.ac.bg.etf.pp1.ast.EqualDesignatorStatement;
-import rs.ac.bg.etf.pp1.ast.ExprCommaNumberStatementPrint;
-import rs.ac.bg.etf.pp1.ast.ExprStatementPrint;
-import rs.ac.bg.etf.pp1.ast.ExprTernary;
-import rs.ac.bg.etf.pp1.ast.FindAnyDesignatorStatement;
-import rs.ac.bg.etf.pp1.ast.GERelop;
-import rs.ac.bg.etf.pp1.ast.GRelop;
-import rs.ac.bg.etf.pp1.ast.IncDesignatorStatement;
-import rs.ac.bg.etf.pp1.ast.IndexDesignator;
-import rs.ac.bg.etf.pp1.ast.LERelop;
-import rs.ac.bg.etf.pp1.ast.LRelop;
-import rs.ac.bg.etf.pp1.ast.ListCondFactList;
-import rs.ac.bg.etf.pp1.ast.ListCondTermList;
-import rs.ac.bg.etf.pp1.ast.ListFactorTerm;
-import rs.ac.bg.etf.pp1.ast.ListTermExprArithmetic;
-import rs.ac.bg.etf.pp1.ast.MethodName;
-import rs.ac.bg.etf.pp1.ast.MinusTermExprArithmetic;
-import rs.ac.bg.etf.pp1.ast.MulMulop;
-import rs.ac.bg.etf.pp1.ast.NEQRelop;
-import rs.ac.bg.etf.pp1.ast.NewFactorArray;
-import rs.ac.bg.etf.pp1.ast.NumberFactor;
-import rs.ac.bg.etf.pp1.ast.PlusAddop;
-import rs.ac.bg.etf.pp1.ast.RelopCondFact;
-import rs.ac.bg.etf.pp1.ast.SingleMethodDecl;
-import rs.ac.bg.etf.pp1.ast.StatementRead;
-import rs.ac.bg.etf.pp1.ast.TernMid;
-import rs.ac.bg.etf.pp1.ast.TernStart;
-import rs.ac.bg.etf.pp1.ast.VisitorAdaptor;
+import rs.ac.bg.etf.pp1.ast.*;
 import rs.etf.pp1.mj.runtime.Code;
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
@@ -49,16 +16,31 @@ public class CodeGenerator extends VisitorAdaptor {
 	public int getMainPc() {
 		return mainPc;
 	}
-	
+
 	private int relopCode;
-	
+
 	private Obj reg0, reg1, reg2, reg3;
+
 	public CodeGenerator(Obj reg0, Obj reg1, Obj reg2, Obj reg3) {
 		this.reg0 = reg0;
 		this.reg1 = reg1;
 		this.reg2 = reg2;
 		this.reg3 = reg3;
+		Obj chr = Tab.find("chr");
+		Obj ord = Tab.find("ord");
+		Obj len = Tab.find("len");
+		// chr() function
+		chr.setAdr(Code.pc);
+		Code.put(Code.return_);
+		// ord() function
+		ord.setAdr(Code.pc);
+		Code.put(Code.return_);
+		// len() function
+		len.setAdr(Code.pc);
+		Code.put(Code.arraylength);
+		Code.put(Code.return_);
 	}
+
 	// METHOD
 	public void visit(MethodName meth) {
 		if ("main".equalsIgnoreCase(meth.getMethodName())) {
@@ -66,19 +48,58 @@ public class CodeGenerator extends VisitorAdaptor {
 		}
 		meth.obj.setAdr(Code.pc);
 		Code.put(Code.enter);
-		Code.put(0);
+		Code.put(meth.obj.getLevel());
 		Code.put(meth.obj.getLocalSymbols().size());
 	}
 
 	public void visit(SingleMethodDecl methodDecl) {
+		if (methodDecl.obj.getType() == Tab.noType) {
+			Code.put(Code.exit);
+			Code.put(Code.return_);
+		} else {
+			// sa prezentacije predavanje
+			// izaziva runtime gresku ako se stiglo do ovde a nije return bio
+			Code.put(Code.trap);
+			Code.put(1);
+		}
+	}
+
+	public void visit(NoExprStatementReturn stmt) {
 		Code.put(Code.exit);
 		Code.put(Code.return_);
+	}
+
+	public void visit(ExprStatementReturn stmt) {
+		Code.put(Code.exit);
+		Code.put(Code.return_);
+	}
+
+	public void visit(CallDesignatorStatement stmt) {
+		Obj obj = stmt.getDesignator().obj;
+		if (obj.getFpPos() == 0) {
+			// function
+			Code.put(Code.call);
+			Code.put2(obj.getAdr() - Code.pc + 1);
+		} else {
+			// TODO klase
+		}
+	}
+
+	public void visit(CallFactor fact) {
+		Obj obj = fact.getDesignator().obj;
+		if (obj.getFpPos() == 0) {
+			// function
+			Code.put(Code.call);
+			Code.put2(obj.getAdr() - Code.pc + 1);
+		} else {
+			// TODO klase
+		}
 	}
 
 	// PRINT
 
 	public void visit(ExprStatementPrint stmt) {
-		Code.loadConst(5);
+		Code.loadConst(1);
 		if (stmt.getExpr().obj.getType() == Tab.charType)
 			Code.put(Code.bprint);
 		else
@@ -95,11 +116,13 @@ public class CodeGenerator extends VisitorAdaptor {
 			Code.put(Code.print);
 	}
 
-	// READ 
+	// READ
 	public void visit(StatementRead stmt) {
 		Obj obj = stmt.getDesignator().obj;
-		if(obj.getType().getKind() == Struct.Char) Code.put(Code.bread);
-		else Code.put(Code.read);
+		if (obj.getType().getKind() == Struct.Char)
+			Code.put(Code.bread);
+		else
+			Code.put(Code.read);
 		Code.store(obj);
 	}
 	// FACTOR
@@ -119,32 +142,32 @@ public class CodeGenerator extends VisitorAdaptor {
 	// DESIGNATOR
 	public void visit(DesignatorFactor fact) {
 		if (fact.getDesignator() instanceof DotLengthDesignator) {
-	        return;
-	    }
+			return;
+		}
 		if (fact.getDesignator() instanceof IndexDesignator) {
-	        Struct elemType = fact.getDesignator().obj.getType();
-	        if (elemType == Tab.charType)
-	            Code.put(Code.baload);
-	        else
-	            Code.put(Code.aload);
-	    } else {
-	        Code.load(fact.getDesignator().obj);
-	    }
+			Struct elemType = fact.getDesignator().obj.getType();
+			if (elemType == Tab.charType)
+				Code.put(Code.baload);
+			else
+				Code.put(Code.aload);
+		} else {
+			Code.load(fact.getDesignator().obj);
+		}
 	}
 
 	public void visit(EqualDesignatorStatement stmt) {
 		if (stmt.getDesignator() instanceof IndexDesignator) {
-	        Struct elemType = stmt.getDesignator().obj.getType();
+			Struct elemType = stmt.getDesignator().obj.getType();
 
-	        if (elemType == Tab.charType)
-	            Code.put(Code.bastore);
-	        else
-	            Code.put(Code.astore);
-	    } else {
-	        Code.store(stmt.getDesignator().obj);
-	    }
+			if (elemType == Tab.charType)
+				Code.put(Code.bastore);
+			else
+				Code.put(Code.astore);
+		} else {
+			Code.store(stmt.getDesignator().obj);
+		}
 	}
-	
+
 	public void visit(IncDesignatorStatement design) {
 		Obj obj = design.getDesignator().obj;
 		Code.load(obj);
@@ -152,7 +175,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.put(Code.add);
 		Code.store(obj);
 	}
-	
+
 	public void visit(DecDesignatorStatement design) {
 		Obj obj = design.getDesignator().obj;
 		Code.load(obj);
@@ -161,195 +184,284 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.store(obj);
 	}
 	// ARITHMETICS
-	
-	public void visit(ListTermExprArithmetic expr){
-		if(expr.getAddop() instanceof PlusAddop) {
+
+	public void visit(ListTermExprArithmetic expr) {
+		if (expr.getAddop() instanceof PlusAddop) {
 			Code.put(Code.add);
-		}
-		else {
+		} else {
 			Code.put(Code.sub);
 		}
 	}
-	
+
 	public void visit(MinusTermExprArithmetic expr) {
 		Code.put(Code.neg);
 	}
-	
+
 	public void visit(ListFactorTerm term) {
-		if(term.getMulop() instanceof MulMulop) {
+		if (term.getMulop() instanceof MulMulop) {
 			Code.put(Code.mul);
-		}
-		else if (term.getMulop() instanceof DivMulop) {
+		} else if (term.getMulop() instanceof DivMulop) {
 			Code.put(Code.div);
-		}
-		else {
+		} else {
 			Code.put(Code.rem);
 		}
 	}
-	
+
 	// ARRAY
-	
+
 	public void visit(NewFactorArray fact) {
 		Code.put(Code.newarray);
-		if(fact.getType().obj.getType().getKind() == Struct.Char)
+		if (fact.getType().obj.getType().getKind() == Struct.Char)
 			Code.put(0);
-		else Code.put(1);
+		else
+			Code.put(1);
 	}
-	
+
 	public void visit(DesignatorArray arr) {
-	    Code.load(arr.getDesignator().obj);
+		Code.load(arr.getDesignator().obj);
 	}
-	
+
 	// LENGTH
-	
+
 	public void visit(DotLengthDesignator design) {
 		Code.load(design.getDesignator().obj);
 		Code.put(Code.arraylength);
-		
+
 	}
-	
+
 	// TERNARY
-	private Stack<Integer> falseFixups = new Stack<>();
-	private Stack<Integer> endFixups = new Stack<>();
+	private Stack<Integer> ternaryFalseFixups = new Stack<>();
+	private Stack<Integer> ternaryEndFixups = new Stack<>();
+
 	public void visit(TernStart dummy) {
 		Code.loadConst(0);
 		Code.putFalseJump(Code.ne, 0);
-		falseFixups.push(Code.pc - 2);
+		ternaryFalseFixups.push(Code.pc - 2);
 		// if(cond == 0) goto ELSE
 	}
-	
+
 	public void visit(TernMid dummy) {
 		Code.putJump(0);
-		endFixups.push(Code.pc - 2);
-		Code.fixup(falseFixups.pop());
+		ternaryEndFixups.push(Code.pc - 2);
+		Code.fixup(ternaryFalseFixups.pop());
 		// expr_true; goto end; else:
 	}
+
 	public void visit(ExprTernary expr) {
-		Code.fixup(endFixups.pop());
+		Code.fixup(ternaryEndFixups.pop());
 	}
-	
+
 	// CONDITION
 	public void visit(EQRelop relop) {
-	    relopCode = Code.eq;
+		relopCode = Code.eq;
 	}
 
 	public void visit(NEQRelop relop) {
-	    relopCode = Code.ne;
+		relopCode = Code.ne;
 	}
 
 	public void visit(GRelop relop) {
-	    relopCode = Code.gt;
+		relopCode = Code.gt;
 	}
 
 	public void visit(GERelop relop) {
-	    relopCode = Code.ge;
+		relopCode = Code.ge;
 	}
 
 	public void visit(LRelop relop) {
-	    relopCode = Code.lt;
+		relopCode = Code.lt;
 	}
 
 	public void visit(LERelop relop) {
-	    relopCode = Code.le;
+		relopCode = Code.le;
 	}
+
 	public void visit(RelopCondFact dummy) {
 
-	    int adrFalse;
+		int adrFalse;
 
-	    Code.putFalseJump(relopCode, 0);
-	    adrFalse = Code.pc - 2;
+		Code.putFalseJump(relopCode, 0);
+		adrFalse = Code.pc - 2;
 
-	    Code.loadConst(1);
-	    Code.putJump(0);
+		Code.loadConst(1);
+		Code.putJump(0);
 
-	    int adrEnd = Code.pc - 2;
+		int adrEnd = Code.pc - 2;
 
-	    Code.fixup(adrFalse);
-	    Code.loadConst(0);
+		Code.fixup(adrFalse);
+		Code.loadConst(0);
 
-	    Code.fixup(adrEnd);
+		Code.fixup(adrEnd);
 	}
-	
+
 	public void visit(ListCondFactList dummy) {
-	    Code.put(Code.mul);
+		Code.put(Code.mul);
 	}
-	
+
 	public void visit(ListCondTermList node) {
 
-	    Code.put(Code.add);
+		Code.put(Code.add);
 
-	    Code.loadConst(0);
-	    Code.putFalseJump(Code.ne, 0);
+		Code.loadConst(0);
+		Code.putFalseJump(Code.ne, 0);
 
-	    int adrFalse = Code.pc - 2;
+		int adrFalse = Code.pc - 2;
 
-	    Code.loadConst(1);
-	    Code.putJump(0);
+		Code.loadConst(1);
+		Code.putJump(0);
 
-	    int adrEnd = Code.pc - 2;
+		int adrEnd = Code.pc - 2;
 
-	    Code.fixup(adrFalse);
-	    Code.loadConst(0);
+		Code.fixup(adrFalse);
+		Code.loadConst(0);
 
-	    Code.fixup(adrEnd);
+		Code.fixup(adrEnd);
 	}
-	
-	// FIND ANY 
-	
+
+	// FIND ANY
+
 	public void visit(FindAnyDesignatorStatement stmt) {
 		Obj arr = stmt.getDesignator1().obj;
 		// expr stack : value
-		
+
 		Code.store(reg0); // REG0 = search value
-		
+
 		Code.loadConst(0);
-		Code.store(reg1); // REG1 = 0   index
-		
+		Code.store(reg1); // REG1 = 0 index
+
 		Code.loadConst(0);
-		Code.store(reg2); // REG2 = 0	return value
-		
+		Code.store(reg2); // REG2 = 0 return value
+
 		int loop = Code.pc;
-	
+
 		Code.load(reg1);
 		Code.load(arr);
 		Code.put(Code.arraylength);
 		Code.putFalseJump(Code.lt, 0);
 		int exit = Code.pc - 2;
-		
+
 		Code.load(arr);
 		Code.load(reg1);
-		if(arr.getType().getElemType() == Tab.charType) Code.put(Code.baload);
-		else Code.put(Code.aload);
-		
+		if (arr.getType().getElemType() == Tab.charType)
+			Code.put(Code.baload);
+		else
+			Code.put(Code.aload);
+
 		Code.load(reg0);
-		
+
 		Code.putFalseJump(Code.eq, 0);
 		int next = Code.pc - 2;
-		
+
 		Code.loadConst(1);
 		Code.store(reg2);
-		
+
 		Code.putJump(0);
 		int end = Code.pc - 2;
-		
+
 		Code.fixup(next);
-		
+
 		Code.load(reg1);
-	    Code.loadConst(1);
-	    Code.put(Code.add);
-	    Code.store(reg1);
+		Code.loadConst(1);
+		Code.put(Code.add);
+		Code.store(reg1);
 
-	    Code.putJump(loop);
+		Code.putJump(loop);
 
-	    Code.fixup(exit);
+		Code.fixup(exit);
 
-	    Code.fixup(end);
+		Code.fixup(end);
 
-	    Code.load(reg2);
-	    Code.store(stmt.getDesignator().obj);
+		Code.load(reg2);
+		Code.store(stmt.getDesignator().obj);
+
+	}
+
+	// IF/ELSE
+	private Stack<Integer> ifFalseFixups = new Stack<>();
+	private Stack<Integer> ifEndFixups = new Stack<>();
+
+	public void visit(IfStart dummy) {
+		Code.loadConst(0);
+		Code.putFalseJump(Code.ne, 0);
+		ifFalseFixups.push(Code.pc - 2);
+		// if(cond == 0) goto ELSE
+	}
+
+	public void visit(ElseStart dummy) {
+		Code.putJump(0);
+		ifEndFixups.push(Code.pc - 2);
+		Code.fixup(ifFalseFixups.pop());
+		// expr_true; goto end; else:
+	}
+
+	public void visit(IfStatementIf dummy) {
+		Code.fixup(ifFalseFixups.pop());
+	}
+
+	public void visit(ElseStatementIf dummy) {
+		Code.fixup(ifEndFixups.pop());
+	}
+
+	// FOR
+	private Stack<Integer> forBodyStack = new Stack<>();
+	private Stack<Integer> forAfterStack = new Stack<>();
+	private Stack<Integer> forExitStack = new Stack<>();
+	
+	private int forBodyAddr;
+	private int forAfterAddr;
+	private int forCondAddr;
+	private int forExitAddr;
+	
+	private Stack<List<Integer>> continueStack = new Stack<>();
+	private List<Integer> continueAddr;
+	
+	private Stack<List<Integer>> breakStack = new Stack<>();
+	private List<Integer> breakAddr;
+	
+	public void visit(ForCondStart dummy) {
+		forBodyStack.push(forBodyAddr);
+		forAfterStack.push(forAfterAddr);
+		forExitStack.push(forExitAddr);
+		forCondAddr = Code.pc;
+		
+		continueStack.push(continueAddr);
+		breakStack.push(breakAddr);
+
 		
 	}
+	public void visit(ForCondEnd dummy) {
+		Code.loadConst(0);
+		Code.putFalseJump(Code.ne, 0);
+		forExitAddr = Code.pc - 2;
+		Code.putJump(0);
+		forBodyAddr = Code.pc - 2;
+		forAfterAddr = Code.pc;
+		continueAddr = new ArrayList<Integer>();
+		breakAddr = new ArrayList<Integer>();
+	}
+	public void visit(StatementFor stmt) {
+		for(int addr : continueAddr) Code.fixup(addr);
+		Code.putJump(forAfterAddr);
+		for(int addr : breakAddr) Code.fixup(addr);
+		Code.fixup(forExitAddr);
+		forBodyAddr = forBodyStack.pop();
+		forAfterAddr = forAfterStack.pop();
+		forExitAddr = forExitStack.pop();
+		continueAddr = continueStack.pop();
+		breakAddr = breakStack.pop();
+	}
 	
+	public void visit(ForBodyStart dummy) {
+		Code.putJump(forCondAddr);
+		Code.fixup(forBodyAddr);
+	}
 	
-	
+	public void visit(StatementContinue stmt) {
+		Code.putJump(0);
+		continueAddr.add(Code.pc - 2);
+	}
+	public void visit(StatementBreak stmt) {
+		Code.putJump(0);
+		breakAddr.add(Code.pc -2);
+	}
 }
