@@ -278,7 +278,6 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 
 	public void visit(NoRelopCondFact dummy) {
-		System.out.println("NoRelop " + relopCode + " pc=" + Code.pc);
 		if (firstCond) {
 			firstCond = false;
 			falseStack.push(falseAddr);

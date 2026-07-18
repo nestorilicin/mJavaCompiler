@@ -48,24 +48,27 @@ scan with {:
 terminal PROG, BREAK, CLASS, ABSTRACT, ELSE, CONST, IF, NEW, PRINT;
 terminal READ, RETURN, VOID, EXTENDS, CONTINUE, FOR, LENGTH;
 /* OPERATORS */
+
 terminal INC, DEC, PLUS, MINUS, MUL, DIV, MOD, AND, OR, EQUAL;
 terminal RELEQ, RELNEQ, RELG, RELGE, RELL, RELLE;
 /* BRACKETS */
+
 terminal LPAREN, RPAREN, LBRACE, RBRACE, LSQUARE, RSQUARE;
 /* SPECIAL SIGNS */
+
 terminal QMARK, COLON, SEMI, COMMA, DOT;
 
 /* findAny */
 terminal FINDANY;
 
+/* map */
+terminal MAP;
+terminal ARROW;
+
 terminal Boolean BOOL;
 terminal char CHAR;
 terminal String IDENT;
 terminal Integer NUMBER;
-
-/* map */
-terminal MAP;
-terminal ARROW;
 
 nonterminal GlobalDecl GlobalDecl;
 nonterminal GlobalDeclList GlobalDeclList;

@@ -1,0 +1,29 @@
+program Test16
+
+int answer;
+
+{
+
+int square(int x)
+{
+    return x * x;
+}
+
+int cube(int x)
+{
+    return square(x) * x;
+}
+
+int calc(int a, int b)
+{
+    return cube(a) + square(b);
+}
+
+void main()
+{
+    answer = calc(3, 4);
+
+    print(answer); // 43
+}
+
+}

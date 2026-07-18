@@ -1,0 +1,75 @@
+program TestTernary
+
+int a,b,c,d;
+bool x,y,z;
+int r;
+
+{
+    void main()
+    {
+        a = 5;
+        b = 10;
+        c = 15;
+        d = 20;
+
+        x = true;
+        y = false;
+        z = true;
+
+        r = x ? 1 : 2;
+        print(r); print(eol);
+        // ocekivano: 1
+
+        r = y ? 1 : 2;
+        print(r); print(eol);
+        // ocekivano: 2
+
+        r = a < b ? a : b;
+        print(r); print(eol);
+        // ocekivano: 5
+
+        r = a > b ? a : b;
+        print(r); print(eol);
+        // ocekivano: 10
+
+        r = x ? a + b : c + d;
+        print(r); print(eol);
+        // ocekivano: 15
+
+        r = y ? a + b : c + d;
+        print(r); print(eol);
+        // ocekivano: 35
+
+        r = x ? y ? 1 : 2 : 3;
+        print(r); print(eol);
+        // ocekivano: 2
+
+        r = y ? 1 : x ? 2 : 3;
+        print(r); print(eol);
+        // ocekivano: 2
+
+        r = x ? y ? z ? 1 : 2 : 3 : 4;
+        print(r); print(eol);
+        // ocekivano: 3
+
+        r = x ? a < b ? 11 : 22 : 33;
+        print(r); print(eol);
+        // ocekivano: 11
+
+        r = y ? 11 : a < b ? 22 : 33;
+        print(r); print(eol);
+        // ocekivano: 22
+
+        r = a < b ? c < d ? 100 : 200 : 300;
+        print(r); print(eol);
+        // ocekivano: 100
+
+        r = a > b ? 100 : c < d ? 200 : 300;
+        print(r); print(eol);
+        // ocekivano: 200
+
+        r = x ? y ? 1 : z ? 2 : 3 : 4;
+        print(r); print(eol);
+        // ocekivano: 2
+    }
+}

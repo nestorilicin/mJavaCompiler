@@ -1,0 +1,29 @@
+program Test13
+
+const int BASE = 7;
+
+int result;
+
+{
+
+int compute(int a, int b)
+int x;
+int y;
+{
+    x = a * b;
+    y = x + BASE;
+
+    y = y - a; 
+    y = y + b * 2; 
+
+    return y;
+}
+
+void main()
+{
+    result = compute(5, 8);
+
+    print(result); // 58
+}
+
+}
