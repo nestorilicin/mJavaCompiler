@@ -19,23 +19,21 @@ public class CodeGenerator extends VisitorAdaptor {
 
 	private int relopCode;
 
-	private Obj reg0, reg1, reg2, reg3;
+	private Obj reg0, reg1, reg2;
 
-	public CodeGenerator(Obj reg0, Obj reg1, Obj reg2, Obj reg3) {
-		this.reg0 = reg0;
-		this.reg1 = reg1;
-		this.reg2 = reg2;
-		this.reg3 = reg3;
+	public CodeGenerator(SemanticAnalyzer semAnal) {
+		this.reg0 = semAnal.getReg0();
+		this.reg1 = semAnal.getReg1();
+		this.reg2 = semAnal.getReg2();
+		
 		Obj chr = Tab.find("chr");
 		Obj ord = Tab.find("ord");
 		Obj len = Tab.find("len");
-		// chr() function
+		
 		chr.setAdr(Code.pc);
 		Code.put(Code.return_);
-		// ord() function
 		ord.setAdr(Code.pc);
 		Code.put(Code.return_);
-		// len() function
 		len.setAdr(Code.pc);
 		Code.put(Code.arraylength);
 		Code.put(Code.return_);
@@ -178,6 +176,9 @@ public class CodeGenerator extends VisitorAdaptor {
 
 	public void visit(IncDesignatorStatement design) {
 		Obj obj = design.getDesignator().obj;
+		if(obj.getKind() == Obj.Elem) {
+			Code.put(Code.dup2); // za nizove
+		}
 		Code.load(obj);
 		Code.loadConst(1);
 		Code.put(Code.add);
@@ -186,6 +187,9 @@ public class CodeGenerator extends VisitorAdaptor {
 
 	public void visit(DecDesignatorStatement design) {
 		Obj obj = design.getDesignator().obj;
+		if(obj.getKind() == Obj.Elem) {
+			Code.put(Code.dup2); // za nizove
+		}
 		Code.load(obj);
 		Code.loadConst(-1);
 		Code.put(Code.add);
@@ -274,8 +278,16 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 
 	public void visit(NoRelopCondFact dummy) {
+		if (firstCond) {
+			firstCond = false;
+			falseStack.push(falseAddr);
+			trueStack.push(trueAddr);
+			falseAddr = new ArrayList<Integer>();
+			trueAddr = new ArrayList<Integer>();
+		}
 		Code.put(Code.const_1);
-		Code.putFalseJump(Code.eq, 0);
+		Code.putFalseJump(relopCode, 0);
+		falseAddr.add(Code.pc - 2);
 	}
 
 	public void visit(OrSign dummy) {

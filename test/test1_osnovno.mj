@@ -1,0 +1,36 @@
+program Test1
+
+const int MAX = 100;
+int a, b, c;
+{
+	void main()
+	{
+		a = 5;
+		b = 3;
+
+		c = a + b;
+		print(c); print(eol); // ocekivano: 8
+
+		c = a - b;
+		print(c); print(eol); // ocekivano: 2
+
+		c = a * b;
+		print(c); print(eol); // ocekivano: 15
+
+		c = a / b;
+		print(c); print(eol); // ocekivano: 1
+
+		c = a % b;
+		print(c); print(eol); // ocekivano: 2
+
+		c = -a;
+		print(c); print(eol); // ocekivano: -5
+
+		print(MAX); print(eol); // ocekivano: 100
+
+		print('X'); print(eol); // ocekivano: X
+
+		print(true); print(eol); // ocekivano: 1
+		print(false); print(eol); // ocekivano: 0
+	}
+}

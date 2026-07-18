@@ -1,0 +1,22 @@
+program TestMissingReturn
+
+int x;
+
+{
+    int f()
+    {
+        if (x > 0)
+            return 1;
+        else
+            print(123);
+
+        // opet nema return
+    }
+
+    void main()
+    {
+        x = -1;
+        print(f());
+        print(eol);
+    }
+}

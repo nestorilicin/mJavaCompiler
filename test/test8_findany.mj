@@ -1,0 +1,36 @@
+program Test8
+
+int brojevi[];
+char slova[];
+bool r1, r2, r3, r4, r5;
+{
+	void main()
+	{
+		brojevi = new int[5];
+		brojevi[0] = 10;
+		brojevi[1] = 20;
+		brojevi[2] = 3;
+		brojevi[3] = 40;
+		brojevi[4] = 50;
+
+		r1 = brojevi.findAny(10);
+		print(r1); print(eol); // ocekivano: 1 (na pocetku)
+
+		r2 = brojevi.findAny(3);
+		print(r2); print(eol); // ocekivano: 1 (u sredini)
+
+		r3 = brojevi.findAny(50);
+		print(r3); print(eol); // ocekivano: 1 (na kraju)
+
+		r4 = brojevi.findAny(999);
+		print(r4); print(eol); // ocekivano: 0 (ne postoji)
+
+		slova = new char[4];
+		slova[0] = 'a';
+		slova[1] = 'b';
+		slova[2] = 'c';
+		slova[3] = 'd';
+		r5 = slova.findAny('c');
+		print(r5); print(eol); // ocekivano: 1
+	}
+}

@@ -1,0 +1,38 @@
+program Test7
+
+int a, b, citano;
+bool rezultat;
+{
+	bool ispisiIVratiTrue()
+	{
+		print('T');
+		return true;
+	}
+
+	bool ispisiIVratiFalse()
+	{
+		print('F');
+		return false;
+	}
+
+	void main()
+	{
+		a = 5;
+		b = 10;
+
+		rezultat = a > b && ispisiIVratiTrue() ? true : false;
+		print(rezultat); print(eol); // ocekivano: 0 (T se NE ispisuje - kratki spoj)
+
+		rezultat = a < b && ispisiIVratiTrue() ? true : false;
+		print(rezultat); print(eol); // ocekivano: T1
+
+		rezultat = a < b || ispisiIVratiFalse() ? true : false;
+		print(rezultat); print(eol); // ocekivano: 1 (F se NE ispisuje - kratki spoj)
+
+		rezultat = a > b || ispisiIVratiFalse() ? true : false;
+		print(rezultat); print(eol); // ocekivano: F0
+
+		read(citano);
+		print(citano); print(eol); // ocekivano: ono sto unesete kao input
+	}
+}

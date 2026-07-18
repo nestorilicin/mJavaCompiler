@@ -1,0 +1,43 @@
+program Test10
+
+
+
+const int GRANICA = 3;
+
+int brojevi[], filtrirano[];
+int i, unos;
+bool nadjeno;
+int status;
+{
+	int kvadrat(int x)
+	{
+		return x * x;
+	}
+
+	void main()
+	{
+	
+		brojevi = new int[6];
+		for (i = 0; i < brojevi.length; i++) {
+			brojevi[i] = i + 1;
+		}
+
+		nadjeno = brojevi.findAny(4);
+		print(nadjeno); print(eol); // ocekivano: 1
+
+		nadjeno = brojevi.findAny(100);
+		print(nadjeno); print(eol); // ocekivano: 0
+
+		filtrirano = brojevi.map(i => kvadrat(i));
+		for (i = 0; i < filtrirano.length; i++) {
+			print(filtrirano[i]);
+			print(eol);
+		}
+		// ocekivano (svaki u svom redu): 1 4 9 16 25 36
+
+		read(unos);
+		if (unos > GRANICA) print(1);
+		else print(0);
+		print(eol); // ocekivano: 1 ako je unos > 3, inace 0
+	}
+}

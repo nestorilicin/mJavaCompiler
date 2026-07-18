@@ -5,6 +5,7 @@ program test302
 const int jedan = 1;
 
 int i, j;
+
 bool ibool;
 
 int niz[], niz2[], niz3[], niz4[];

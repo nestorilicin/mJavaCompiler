@@ -1,0 +1,30 @@
+program Test2
+
+int x;
+bool flag;
+{
+	void main()
+	{
+		x = 10;
+		if (x > 5) print(1);
+		else print(0);
+		print(eol); // ocekivano: 1
+
+		x = 3;
+		if (x > 5) print(1);
+		else print(0);
+		print(eol); // ocekivano: 0
+
+		x = 7;
+		if (x > 5)
+			if (x > 20) print(100);
+			else print(200);
+		print(eol); // ocekivano: 200 (dangling else - vezuje se za blizi if)
+
+		flag = x > 5 ? true : false;
+		print(flag); print(eol); // ocekivano: 1
+
+		x = x > 100 ? 1 : (x > 5 ? 2 : 3);
+		print(x); print(eol); // ocekivano: 2
+	}
+}

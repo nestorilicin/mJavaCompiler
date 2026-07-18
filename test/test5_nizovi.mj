@@ -1,0 +1,31 @@
+program Test5
+
+int niz[];
+char karakteri[];
+int i;
+{
+	void main()
+	{
+		niz = new int[5];
+		for (i = 0; i < niz.length; i++) {
+			niz[i] = i * i;
+		}
+		print(niz[0]); print(eol); // ocekivano: 0
+		print(niz[3]); print(eol); // ocekivano: 9
+		print(niz.length); print(eol); // ocekivano: 5
+
+		niz[2]++;
+		print(niz[2]); print(eol); // ocekivano: 5
+
+		niz[2]--;
+		niz[2]--;
+		print(niz[2]); print(eol); // ocekivano: 3
+
+		karakteri = new char[3];
+		karakteri[0] = 'x';
+		karakteri[1] = 'y';
+		karakteri[2] = 'z';
+		print(karakteri[1]); print(eol); // ocekivano: y
+		print(karakteri.length); print(eol); // ocekivano: 3
+	}
+}

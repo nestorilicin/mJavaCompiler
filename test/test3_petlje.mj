@@ -1,0 +1,42 @@
+program Test3
+
+int i, j, sum;
+{
+	void main()
+	{
+		sum = 0;
+		for (i = 0; i < 5; i++) {
+			sum = sum + i;
+		}
+		print(sum); print(eol); // ocekivano: 10
+
+		sum = 0;
+		for (i = 0; i < 5; i++) {
+			if (i == 2) continue;
+			sum = sum + i;
+		}
+		print(sum); print(eol); // ocekivano: 8
+
+		sum = 0;
+		for (i = 0; i < 10; i++) {
+			if (i == 4) break;
+			sum = sum + i;
+		}
+		print(sum); print(eol); // ocekivano: 6
+
+		sum = 0;
+		for (i = 0; i < 3; i++) {
+			for (j = 0; j < 3; j++) {
+				sum++;
+			}
+		}
+		print(sum); print(eol); // ocekivano: 9
+
+		i = 0;
+		for (;;) {
+			i++;
+			if (i == 5) break;
+		}
+		print(i); print(eol); // ocekivano: 5
+	}
+}

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="MJCompiler" default="compile" basedir=".">
+	<property file="build.properties"/>
 	<target name="delete">
 		<delete>
 			<fileset dir="src/rs/ac/bg/etf/pp1">
@@ -57,7 +58,7 @@
 	
 	<target name="disasm">
 		<java classname="rs.etf.pp1.mj.runtime.disasm" fork="true">
-			<arg value="test/program.obj" />
+			<arg value="${objfile}" />
 			<classpath>
 				<pathelement location="lib/mj-runtime-1.1.jar" />
 			</classpath>
@@ -65,7 +66,7 @@
 	</target>
 	<target name="runObj" depends="disasm">
 		<java classname="rs.etf.pp1.mj.runtime.Run" fork="true">
-			<arg value="test/program.obj" />
+			<arg value="${objfile}" />
 			<redirector input="input.txt"/>
 			<classpath>
 				<pathelement location="lib/mj-runtime-1.1.jar" />
@@ -74,7 +75,7 @@
 	</target>
 	<target name="debug" depends="disasm">
 		<java classname="rs.etf.pp1.mj.runtime.Run" fork="true">
-			<arg value="test/program.obj" />
+			<arg value="${objfile}"/>
 			<arg value="-debug" />
 			<redirector input="input.txt" />
 			<classpath>

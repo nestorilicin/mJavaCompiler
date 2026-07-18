@@ -1,0 +1,30 @@
+program Test4
+{
+	int faktorijel(int n)
+	{
+		if (n <= 1) return 1;
+		return n * faktorijel(n - 1);
+	}
+
+	int fib(int n)
+	{
+		if (n <= 1) return n;
+		return fib(n - 1) + fib(n - 2);
+	}
+
+	int zbir(int a, int b, int c)
+	{
+		return a + b + c;
+	}
+
+	void main()
+	{
+		print(faktorijel(5)); print(eol); // ocekivano: 120
+
+		print(fib(7)); print(eol); // ocekivano: 13
+
+		print(zbir(1, 2, 3)); print(eol); // ocekivano: 6
+
+		print(zbir(faktorijel(3), fib(4), 0)); print(eol); // ocekivano: 9 (6+3+0)
+	}
+}

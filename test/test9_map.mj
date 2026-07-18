@@ -1,0 +1,35 @@
+program Test9
+
+int brojevi[];
+int duplo[];
+int el;
+char slova[];
+char pomerena[];
+char c;
+{
+	void main()
+	{
+		brojevi = new int[4];
+		brojevi[0] = 1;
+		brojevi[1] = 2;
+		brojevi[2] = 3;
+		brojevi[3] = 4;
+
+		duplo = brojevi.map(el => el * 2);
+		print(duplo[0]); print(eol); // ocekivano: 2
+		print(duplo[1]); print(eol); // ocekivano: 4
+		print(duplo[2]); print(eol); // ocekivano: 6
+		print(duplo[3]); print(eol); // ocekivano: 8
+		print(duplo.length); print(eol); // ocekivano: 4
+
+		slova = new char[3];
+		slova[0] = 'a';
+		slova[1] = 'b';
+		slova[2] = 'c';
+
+		pomerena = slova.map(c => chr(ord(c) - 32));
+		print(pomerena[0]); print(eol); // ocekivano: A
+		print(pomerena[1]); print(eol); // ocekivano: B
+		print(pomerena[2]); print(eol); // ocekivano: C
+	}
+}
