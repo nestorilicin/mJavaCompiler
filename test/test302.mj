@@ -98,6 +98,5 @@ int niz[], niz2[], niz3[], niz4[];
 			print(eol);
 		}
 		
-		
 	}
 }

@@ -18,13 +18,23 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	private Obj reg1;
 	private Obj reg2;
 
-	public Obj getReg0() { return reg0;}
-	public Obj getReg1() { return reg1;}
-	public Obj getReg2() { return reg2;}
-	
+	public Obj getReg0() {
+		return reg0;
+	}
+
+	public Obj getReg1() {
+		return reg1;
+	}
+
+	public Obj getReg2() {
+		return reg2;
+	}
+
 	private boolean errorDetected = false;
 
-	public boolean passed() { return !errorDetected; }
+	public boolean passed() {
+		return !errorDetected;
+	}
 
 	private int nVars;
 
@@ -34,6 +44,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 
 	Logger log = Logger.getLogger(getClass());
 	Struct boolStruct;
+
 	// TYPE
 	private Struct currentType = null;
 	// CONST
@@ -46,7 +57,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	private Obj currentMethod = null;
 
 	private boolean mainFlag = false;
-
 
 	public SemanticAnalyzer(Struct bs) {
 		boolStruct = bs;
@@ -65,6 +75,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		 * obj.getKind() == Obj.Elem));
 		 */
 	}
+
 	private Stack<List<Obj>> actParsStack = new Stack<>();
 	private HashMap<Obj, List<Struct>> methodFormPars = new HashMap<>();
 
@@ -91,7 +102,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			return;
 		}
 		List<Obj> currentParams = actParsStack.empty() ? new ArrayList<Obj>() : actParsStack.pop();
-		
+
 		int formalCount = method.getLevel();
 		int actualCount = currentParams.size();
 		if (formalCount != actualCount) {
@@ -100,26 +111,25 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			return;
 		}
 		List<Struct> formPars = methodFormPars.get(method);
-		if(formPars == null) {
+		if (formPars == null) {
 			formPars = new ArrayList<>();
 			switch (method.getName()) {
-			case "chr" :
+			case "chr":
 				formPars.add(Tab.intType);
 				break;
-			case "ord" :
+			case "ord":
 				formPars.add(Tab.charType);
 				break;
-			case "len" :
+			case "len":
 				formPars.add(new Struct(Struct.Array, Tab.noType));
 				break;
 			}
-				
-			
+
 		}
-		for(int i = 0; i < formalCount; i++) {
+		for (int i = 0; i < formalCount; i++) {
 			Struct actualType = currentParams.get(i).getType();
 			Struct formalType = formPars.get(i);
-			if(!actualType.assignableTo(formalType)) {
+			if (!actualType.assignableTo(formalType)) {
 				report_error("Neispravan tip parametra u pozivu metode", lin);
 				currentParams = null;
 				return;
@@ -153,7 +163,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		reg0 = Tab.insert(Obj.Var, "_reg0", Tab.intType);
 		reg1 = Tab.insert(Obj.Var, "_reg1", Tab.intType);
 		reg2 = Tab.insert(Obj.Var, "_reg2", Tab.intType);
-		
 
 	}
 
@@ -690,6 +699,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	public void visit(CallStart dummy) {
 		actParsStack.push(new ArrayList<Obj>());
 	}
+
 	public void visit(NumberFactor factor) {
 		factor.obj = new Obj(Obj.Var, "factor", Tab.intType);
 	}

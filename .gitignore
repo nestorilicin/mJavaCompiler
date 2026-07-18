@@ -11,3 +11,4 @@ src/rs/ac/bg/etf/pp1/MJParser.java
 src/rs/ac/bg/etf/pp1/Yylex.java
 src/rs/ac/bg/etf/pp1/Yylex.java~
 src/rs/ac/bg/etf/pp1/sym.java
+build.properties

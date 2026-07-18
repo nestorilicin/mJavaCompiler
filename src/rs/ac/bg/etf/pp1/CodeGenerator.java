@@ -278,6 +278,7 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 
 	public void visit(NoRelopCondFact dummy) {
+		System.out.println("NoRelop " + relopCode + " pc=" + Code.pc);
 		if (firstCond) {
 			firstCond = false;
 			falseStack.push(falseAddr);
@@ -286,7 +287,7 @@ public class CodeGenerator extends VisitorAdaptor {
 			trueAddr = new ArrayList<Integer>();
 		}
 		Code.put(Code.const_1);
-		Code.putFalseJump(relopCode, 0);
+		Code.putFalseJump(Code.eq, 0);
 		falseAddr.add(Code.pc - 2);
 	}
 
