@@ -63,6 +63,10 @@ terminal char CHAR;
 terminal String IDENT;
 terminal Integer NUMBER;
 
+/* map */
+terminal MAP;
+terminal ARROW;
+
 nonterminal GlobalDecl GlobalDecl;
 nonterminal GlobalDeclList GlobalDeclList;
 nonterminal SingleGlobalDecl SingleGlobalDecl;
@@ -73,6 +77,8 @@ nonterminal MultipleVarDecl MultipleVarDecl;
 nonterminal ConstDeclList ConstDeclList;
 nonterminal ConstDecl ConstDecl;
 nonterminal SingleConstDecl SingleConstDecl;
+nonterminal MapStart MapStart;
+nonterminal MapEnd MapEnd;
 
 nonterminal MethodDeclList MethodDeclList;
 nonterminal MethodDecl MethodDecl ;
@@ -102,12 +108,13 @@ nonterminal ForAfter ForAfter;
 nonterminal TernStart TernStart;
 nonterminal TernMid TernMid;
 nonterminal IfStart IfStart;
+nonterminal IfEnd IfEnd;
 nonterminal ElseStart ElseStart;
 nonterminal CallStart CallStart;
 nonterminal ForCondStart ForCondStart;
 nonterminal ForCondEnd ForCondEnd;
 nonterminal ForBodyStart ForBodyStart;
-
+nonterminal OrSign OrSign;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj Relop, SingleStatement, MethodReturn, Designator, MethodName, SingleMethodDecl, ProgName, Program, ClassDecl, AbstractClassDecl, ClassExtends;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj CondTermList, CondFactList, Condition, CondTerm, CondFact, Term, Factor, Expr, ExprTernary, ExprArithmetic, Type, ConstValue, OptionalSquares, DesignatorArray;
 nonterminal java.util.ArrayList ActParsList, ActPars;
@@ -258,17 +265,23 @@ DesignatorStatement ::= (EqualDesignatorStatement) Designator:D1 EQUAL Expr:E2 {
 			(DecDesignatorStatement) Designator:D1 DEC {: RESULT=new DecDesignatorStatement(D1); RESULT.setLine(D1left); :}
 			|
 			(FindAnyDesignatorStatement) Designator:D1 EQUAL Designator:D2 DOT FINDANY LPAREN Expr:E3 RPAREN {: RESULT=new FindAnyDesignatorStatement(D1, D2, E3); RESULT.setLine(D1left); :}
+			|
+			(MapDesignatorStatement) Designator:DST EQUAL Designator:SRC DOT MAP LPAREN IDENT:id MapStart:M1 Expr:E2 MapEnd:M3 {: RESULT=new MapDesignatorStatement(DST, SRC, id, M1, E2, M3); RESULT.setLine(DSTleft); :}  
 			;
+MapStart ::= (MapStart) ARROW {: RESULT=new MapStart(); :};
+MapEnd ::= (MapEnd) RPAREN {: RESULT=new MapEnd(); :};
+
 CallStart ::= (CallStart) LPAREN {: RESULT=new CallStart(); :};
 			
-StatementIf ::= (IfStatementIf) IF LPAREN Condition:C1 RPAREN IfStart:I2 SingleStatement:S3 {: RESULT=new IfStatementIf(C1, I2, S3); RESULT.setLine(C1left); :}
+StatementIf ::= (IfStatementIf) IF IfStart:I1 Condition:C2 IfEnd:I3 SingleStatement:S4 {: RESULT=new IfStatementIf(I1, C2, I3, S4); RESULT.setLine(I1left); :}
 			|
-			(ElseStatementIf) IF LPAREN Condition:C1 RPAREN IfStart:I2 SingleStatement:S3 ELSE ElseStart:E4 SingleStatement:S5 {: RESULT=new ElseStatementIf(C1, I2, S3, E4, S5); RESULT.setLine(C1left); :}
+			(ElseStatementIf) IF IfStart:I1 Condition:C2 IfEnd:I3 SingleStatement:S4 ElseStart:E5 SingleStatement:S6 {: RESULT=new ElseStatementIf(I1, C2, I3, S4, E5, S6); RESULT.setLine(I1left); :}
 			| 
 			(ErrorStatementIfBrace) IF LPAREN:eif error {: parser.report_error("\nGRESKA LOGICKI IZRAZ UNUTAR IF; oporavak od greske do ) u liniji " + eifleft, null); :} RPAREN {: RESULT=new ErrorStatementIfBrace(); :}
 			;
-IfStart ::= (IfStart) {: RESULT=new IfStart(); :} /* epsilon */;
-ElseStart ::= (ElseStart) {: RESULT=new ElseStart(); :} /* epsilon */;
+IfStart ::= (IfStart) LPAREN {: RESULT=new IfStart(); :};
+IfEnd ::= (IfEnd) RPAREN {: RESULT=new IfEnd(); :};
+ElseStart ::= (ElseStart) ELSE {: RESULT=new ElseStart(); :};
 StatementBreak ::= (StatementBreak) BREAK SEMI {: RESULT=new StatementBreak(); :};
 
 StatementContinue ::= (StatementContinue) CONTINUE SEMI {: RESULT=new StatementContinue(); :};
@@ -303,7 +316,7 @@ CondFact ::= (NoRelopCondFact) ExprArithmetic:E1 {: RESULT=new NoRelopCondFact(E
 			(RelopCondFact) ExprArithmetic:E1 Relop:R2 ExprArithmetic:E3 {: RESULT=new RelopCondFact(E1, R2, E3); RESULT.setLine(E1left); :}
 			;
 Condition ::= (Condition) CondTermList:C1 {: RESULT=new Condition(C1); RESULT.setLine(C1left); :};
-CondTermList ::= (ListCondTermList) CondTermList:C1 OR CondTerm:C2 {: RESULT=new ListCondTermList(C1, C2); RESULT.setLine(C1left); :}
+CondTermList ::= (ListCondTermList) CondTermList:C1 OrSign:O2 CondTerm:C3 {: RESULT=new ListCondTermList(C1, O2, C3); RESULT.setLine(C1left); :}
 			|
 			(SingleCondTermList) CondTerm:C1 {: RESULT=new SingleCondTermList(C1); RESULT.setLine(C1left); :}
 			;
@@ -312,6 +325,7 @@ CondFactList ::= (ListCondFactList) CondFact:C1 AND CondFactList:C2 {: RESULT=ne
 			|
 			(SingleCondFactList) CondFact:C1 {: RESULT=new SingleCondFactList(C1); RESULT.setLine(C1left); :}
 			;
+OrSign ::= (OrSign) OR {: RESULT=new OrSign(); :};
 /* EXPR */
 Expr ::= (TernExpr) ExprTernary:E1 {: RESULT=new TernExpr(E1); RESULT.setLine(E1left); :}
 			| 

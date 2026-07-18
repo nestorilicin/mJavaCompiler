@@ -33,7 +33,7 @@ public class MJParserTest {
 		
 		Reader br = null;
 		try {
-			String sourceFileName = "test301";
+			String sourceFileName = "program";
 			File sourceCode = new File("test/" + sourceFileName + ".mj");
 			log.info("Compiling source file: " + sourceCode.getAbsolutePath());
 

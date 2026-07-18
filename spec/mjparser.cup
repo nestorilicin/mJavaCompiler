@@ -63,9 +63,14 @@ terminal char CHAR;
 terminal String IDENT;
 terminal Integer NUMBER;
 
+/* map */
+terminal MAP;
+terminal ARROW;
+
 nonterminal GlobalDecl, GlobalDeclList, SingleGlobalDecl;
 nonterminal VarDeclList, VarDecl, SingleVarDecl, MultipleVarDecl;
 nonterminal ConstDeclList, ConstDecl, SingleConstDecl;
+nonterminal MapStart, MapEnd;
 
 nonterminal MethodDeclList, MethodDecl ;
 nonterminal FormPars, FormParsList, SingleFormPar;
@@ -80,10 +85,10 @@ nonterminal StatementReturn;
 nonterminal StatementRead, StatementPrint, StatementIf, StatementFor;
 nonterminal ForInit, ForCond, ForAfter;
 nonterminal TernStart, TernMid;
-nonterminal IfStart, ElseStart;
+nonterminal IfStart, IfEnd, ElseStart;
 nonterminal CallStart;
 nonterminal ForCondStart, ForCondEnd, ForBodyStart;
-
+nonterminal OrSign;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj Relop, SingleStatement, MethodReturn, Designator, MethodName, SingleMethodDecl, ProgName, Program, ClassDecl, AbstractClassDecl, ClassExtends;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj CondTermList, CondFactList, Condition, CondTerm, CondFact, Term, Factor, Expr, ExprTernary, ExprArithmetic, Type, ConstValue, OptionalSquares, DesignatorArray;
 nonterminal java.util.ArrayList ActParsList, ActPars;
@@ -234,17 +239,23 @@ DesignatorStatement ::= (EqualDesignatorStatement) Designator EQUAL Expr
 			(DecDesignatorStatement) Designator DEC
 			|
 			(FindAnyDesignatorStatement) Designator EQUAL Designator DOT FINDANY LPAREN Expr RPAREN
+			|
+			(MapDesignatorStatement) Designator:DST EQUAL Designator:SRC DOT MAP LPAREN IDENT:id MapStart Expr MapEnd  
 			;
+MapStart ::= (MapStart) ARROW;
+MapEnd ::= (MapEnd) RPAREN;
+
 CallStart ::= (CallStart) LPAREN;
 			
-StatementIf ::= (IfStatementIf) IF LPAREN Condition RPAREN IfStart SingleStatement
+StatementIf ::= (IfStatementIf) IF IfStart Condition IfEnd SingleStatement
 			|
-			(ElseStatementIf) IF LPAREN Condition RPAREN IfStart SingleStatement ELSE ElseStart SingleStatement
+			(ElseStatementIf) IF IfStart Condition IfEnd SingleStatement ElseStart SingleStatement
 			| 
 			(ErrorStatementIfBrace) IF LPAREN:eif error {: parser.report_error("\nGRESKA LOGICKI IZRAZ UNUTAR IF; oporavak od greske do ) u liniji " + eifleft, null); :} RPAREN
 			;
-IfStart ::= (IfStart) /* epsilon */;
-ElseStart ::= (ElseStart) /* epsilon */;
+IfStart ::= (IfStart) LPAREN;
+IfEnd ::= (IfEnd) RPAREN;
+ElseStart ::= (ElseStart) ELSE;
 StatementBreak ::= (StatementBreak) BREAK SEMI;
 
 StatementContinue ::= (StatementContinue) CONTINUE SEMI;
@@ -279,7 +290,7 @@ CondFact ::= (NoRelopCondFact) ExprArithmetic
 			(RelopCondFact) ExprArithmetic Relop ExprArithmetic
 			;
 Condition ::= (Condition) CondTermList;
-CondTermList ::= (ListCondTermList) CondTermList OR CondTerm
+CondTermList ::= (ListCondTermList) CondTermList OrSign CondTerm
 			|
 			(SingleCondTermList) CondTerm
 			;
@@ -288,6 +299,7 @@ CondFactList ::= (ListCondFactList) CondFact AND CondFactList
 			|
 			(SingleCondFactList) CondFact
 			;
+OrSign ::= (OrSign) OR;
 /* EXPR */
 Expr ::= (TernExpr) ExprTernary
 			| 

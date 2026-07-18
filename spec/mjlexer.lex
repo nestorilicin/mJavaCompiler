@@ -54,6 +54,7 @@ import java_cup.runtime.Symbol;
 "for"		{ return new_symbol(sym.FOR, yytext()); 		}
 "length" 	{ return new_symbol(sym.LENGTH, yytext()); 		}
 "findAny" 	{ return new_symbol(sym.FINDANY, yytext());		}
+"map"		{ return new_symbol(sym.MAP, yytext());			}
 																/* "switch" 	{ return new_symbol(sym.SWITCH, yytext()); 		} */
 																/* "case" 		{ return new_symbol(sym.CASE, yytext()); 		} */
 
@@ -84,7 +85,9 @@ import java_cup.runtime.Symbol;
 "&&"		{ return new_symbol(sym.AND, yytext());	  	}
 "||"		{ return new_symbol(sym.OR, yytext());	  	}
 /* ASIGN */
+"=>"		{ return new_symbol(sym.ARROW, yytext());	}
 "="			{ return new_symbol(sym.EQUAL, yytext());	}
+
 /* BRACKETS */
 "(" 		{ return new_symbol(sym.LPAREN, yytext()); 	}
 ")" 		{ return new_symbol(sym.RPAREN, yytext()); 	}

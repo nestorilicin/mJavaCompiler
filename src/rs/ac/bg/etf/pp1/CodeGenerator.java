@@ -144,6 +144,14 @@ public class CodeGenerator extends VisitorAdaptor {
 		if (fact.getDesignator() instanceof DotLengthDesignator) {
 			return;
 		}
+		// za map
+		if(insideMap && fact.getDesignator().obj.getName().equals(mapVarName)) {
+			Code.load(mapSrc);
+			Code.load(reg0);
+			if(mapSrc.getType().getElemType() == Tab.charType) Code.put(Code.baload);
+			else Code.put(Code.aload);
+			return;
+		}
 		if (fact.getDesignator() instanceof IndexDesignator) {
 			Struct elemType = fact.getDesignator().obj.getType();
 			if (elemType == Tab.charType)
@@ -229,29 +237,55 @@ public class CodeGenerator extends VisitorAdaptor {
 
 	}
 
-	// TERNARY
-	private Stack<Integer> ternaryFalseFixups = new Stack<>();
-	private Stack<Integer> ternaryEndFixups = new Stack<>();
-
-	public void visit(TernStart dummy) {
-		Code.loadConst(0);
-		Code.putFalseJump(Code.ne, 0);
-		ternaryFalseFixups.push(Code.pc - 2);
-		// if(cond == 0) goto ELSE
-	}
-
-	public void visit(TernMid dummy) {
-		Code.putJump(0);
-		ternaryEndFixups.push(Code.pc - 2);
-		Code.fixup(ternaryFalseFixups.pop());
-		// expr_true; goto end; else:
-	}
-
-	public void visit(ExprTernary expr) {
-		Code.fixup(ternaryEndFixups.pop());
-	}
-
 	// CONDITION
+	private Stack<List<Integer>> falseStack = new Stack<>();
+	private Stack<List<Integer>> trueStack = new Stack<>();
+	private List<Integer> falseAddr;
+	private List<Integer> trueAddr;
+
+	private Stack<Integer> skipStack = new Stack<>();
+	private int skipAdr = -1;
+
+	private boolean firstCond = true;
+	// private Stack<Boolean> firstStack = new Stack<>();
+
+	public void visit(SingleCondTermList dummy) {
+		if (firstCond) {
+			firstCond = false;
+			falseStack.push(falseAddr);
+			trueStack.push(trueAddr);
+			falseAddr = new ArrayList<Integer>();
+			trueAddr = new ArrayList<Integer>();
+		}
+
+		falseAddr.add(Code.pc - 2);
+	}
+
+	public void visit(RelopCondFact dummy) {
+		if (firstCond) {
+			firstCond = false;
+			falseStack.push(falseAddr);
+			trueStack.push(trueAddr);
+			falseAddr = new ArrayList<Integer>();
+			trueAddr = new ArrayList<Integer>();
+		}
+		Code.putFalseJump(relopCode, 0);
+		falseAddr.add(Code.pc - 2);
+	}
+
+	public void visit(NoRelopCondFact dummy) {
+		Code.put(Code.const_1);
+		Code.putFalseJump(Code.eq, 0);
+	}
+
+	public void visit(OrSign dummy) {
+		Code.putJump(0);
+		trueAddr.add(Code.pc - 2);
+		for (int adr : falseAddr)
+			Code.fixup(adr);
+		falseAddr = new ArrayList<Integer>();
+	}
+
 	public void visit(EQRelop relop) {
 		relopCode = Code.eq;
 	}
@@ -276,46 +310,62 @@ public class CodeGenerator extends VisitorAdaptor {
 		relopCode = Code.le;
 	}
 
-	public void visit(RelopCondFact dummy) {
+	// TERNARY
 
-		int adrFalse;
-
-		Code.putFalseJump(relopCode, 0);
-		adrFalse = Code.pc - 2;
-
-		Code.loadConst(1);
-		Code.putJump(0);
-
-		int adrEnd = Code.pc - 2;
-
-		Code.fixup(adrFalse);
-		Code.loadConst(0);
-
-		Code.fixup(adrEnd);
+	public void visit(TernStart dummy) {
+		skipStack.push(skipAdr);
+		firstCond = true;
+		for (int adr : trueAddr)
+			Code.fixup(adr);
 	}
 
-	public void visit(ListCondFactList dummy) {
-		Code.put(Code.mul);
+	public void visit(TernMid dummy) {
+		Code.putJump(0);
+		skipAdr = Code.pc - 2;
+		for (int adr : falseAddr)
+			Code.fixup(adr);
+		// expr_true; goto end; else:
 	}
 
-	public void visit(ListCondTermList node) {
+	public void visit(TernExpr expr) {
+		Code.fixup(skipAdr);
+		falseAddr = falseStack.pop();
+		trueAddr = trueStack.pop();
+		skipAdr = skipStack.pop();
+	}
 
-		Code.put(Code.add);
+	// IF/ELSE
 
-		Code.loadConst(0);
-		Code.putFalseJump(Code.ne, 0);
+	public void visit(IfStart dummy) {
+		skipStack.push(skipAdr);
+	}
 
-		int adrFalse = Code.pc - 2;
+	public void visit(IfEnd dummy) {
+		firstCond = true;
+		for (int adr : trueAddr)
+			Code.fixup(adr);
+	}
 
-		Code.loadConst(1);
+	public void visit(ElseStart dummy) {
 		Code.putJump(0);
+		skipAdr = Code.pc - 2;
+		for (int adr : falseAddr)
+			Code.fixup(adr);
+	}
 
-		int adrEnd = Code.pc - 2;
+	public void visit(IfStatementIf dummy) {
+		for (int adr : falseAddr)
+			Code.fixup(adr);
+		falseAddr = falseStack.pop();
+		trueAddr = trueStack.pop();
+		skipAdr = skipStack.pop();
+	}
 
-		Code.fixup(adrFalse);
-		Code.loadConst(0);
-
-		Code.fixup(adrEnd);
+	public void visit(ElseStatementIf dummy) {
+		Code.fixup(skipAdr);
+		falseAddr = falseStack.pop();
+		trueAddr = trueStack.pop();
+		skipAdr = skipStack.pop();
 	}
 
 	// FIND ANY
@@ -323,145 +373,185 @@ public class CodeGenerator extends VisitorAdaptor {
 	public void visit(FindAnyDesignatorStatement stmt) {
 		Obj arr = stmt.getDesignator1().obj;
 		// expr stack : value
-
 		Code.store(reg0); // REG0 = search value
-
 		Code.loadConst(0);
 		Code.store(reg1); // REG1 = 0 index
-
 		Code.loadConst(0);
 		Code.store(reg2); // REG2 = 0 return value
-
 		int loop = Code.pc;
-
 		Code.load(reg1);
 		Code.load(arr);
 		Code.put(Code.arraylength);
 		Code.putFalseJump(Code.lt, 0);
 		int exit = Code.pc - 2;
-
 		Code.load(arr);
 		Code.load(reg1);
 		if (arr.getType().getElemType() == Tab.charType)
 			Code.put(Code.baload);
 		else
 			Code.put(Code.aload);
-
 		Code.load(reg0);
-
 		Code.putFalseJump(Code.eq, 0);
 		int next = Code.pc - 2;
-
 		Code.loadConst(1);
 		Code.store(reg2);
-
 		Code.putJump(0);
 		int end = Code.pc - 2;
-
 		Code.fixup(next);
-
 		Code.load(reg1);
 		Code.loadConst(1);
 		Code.put(Code.add);
 		Code.store(reg1);
-
 		Code.putJump(loop);
-
 		Code.fixup(exit);
-
 		Code.fixup(end);
-
 		Code.load(reg2);
 		Code.store(stmt.getDesignator().obj);
 
 	}
+	
+	// MAP
+	private int mapLoopStart = -1;
+	private int mapExitJump = -1;
+	private Obj mapDst = null;
+	private Obj mapSrc = null;
 
-	// IF/ELSE
-	private Stack<Integer> ifFalseFixups = new Stack<>();
-	private Stack<Integer> ifEndFixups = new Stack<>();
+	private boolean insideMap = false;
+	private String mapVarName;
+	
+	// reg0 index
+	// reg1 len
+	public void visit(MapStart ms) {
+		MapDesignatorStatement stmt = (MapDesignatorStatement)ms.getParent();
+		mapDst = stmt.getDesignator().obj;
+		mapSrc = stmt.getDesignator1().obj;
+		
 
-	public void visit(IfStart dummy) {
+		mapVarName = stmt.getId();
+		insideMap = true;
+		// index = 0
 		Code.loadConst(0);
-		Code.putFalseJump(Code.ne, 0);
-		ifFalseFixups.push(Code.pc - 2);
-		// if(cond == 0) goto ELSE
+		Code.store(reg0);
+		// len = src.length
+		Code.load(mapSrc);
+		Code.put(Code.arraylength);
+		Code.store(reg1);
+		
+		// alokacija
+		Code.load(reg1);
+		Code.put(Code.newarray);
+		
+		if(mapDst.getType().getElemType() == Tab.charType) Code.put(0);
+		else Code.put(1);
+		
+		Code.store(mapDst);
+		// loop: 
+		mapLoopStart = Code.pc;
+		// if(index >= len) goto end
+		Code.load(reg0);
+		Code.load(reg1);
+		Code.putFalseJump(Code.lt, 0);
+		mapExitJump = Code.pc - 2;
+		
+		
 	}
-
-	public void visit(ElseStart dummy) {
-		Code.putJump(0);
-		ifEndFixups.push(Code.pc - 2);
-		Code.fixup(ifFalseFixups.pop());
-		// expr_true; goto end; else:
-	}
-
-	public void visit(IfStatementIf dummy) {
-		Code.fixup(ifFalseFixups.pop());
-	}
-
-	public void visit(ElseStatementIf dummy) {
-		Code.fixup(ifEndFixups.pop());
+	
+	public void visit(MapEnd me) {
+		Code.store(reg2);
+		// stek: result
+		Code.load(mapDst);
+		Code.load(reg0);
+		Code.load(reg2);
+		
+		// stek: dst index result
+		if(mapSrc.getType().getElemType() == Tab.charType)
+	        Code.put(Code.bastore);
+	    else
+	        Code.put(Code.astore);
+		// index++
+		Code.load(reg0);
+		Code.loadConst(1);
+		Code.put(Code.add);
+		Code.store(reg0);
+		// goto loop
+		Code.putJump(mapLoopStart);
+		// end:
+		Code.fixup(mapExitJump);
+		insideMap = false;
+		mapVarName = null;
+		mapLoopStart = -1;
+		mapExitJump = -1;
+		mapDst = null;
+		mapSrc = null;
+		
 	}
 
 	// FOR
 	private Stack<Integer> forBodyStack = new Stack<>();
 	private Stack<Integer> forAfterStack = new Stack<>();
-	private Stack<Integer> forExitStack = new Stack<>();
-	
+
 	private int forBodyAddr;
 	private int forAfterAddr;
 	private int forCondAddr;
-	private int forExitAddr;
-	
+
 	private Stack<List<Integer>> continueStack = new Stack<>();
 	private List<Integer> continueAddr;
-	
+
 	private Stack<List<Integer>> breakStack = new Stack<>();
 	private List<Integer> breakAddr;
-	
+
+
 	public void visit(ForCondStart dummy) {
 		forBodyStack.push(forBodyAddr);
 		forAfterStack.push(forAfterAddr);
-		forExitStack.push(forExitAddr);
-		forCondAddr = Code.pc;
-		
 		continueStack.push(continueAddr);
 		breakStack.push(breakAddr);
+		forCondAddr = Code.pc;
 
-		
 	}
+
 	public void visit(ForCondEnd dummy) {
-		Code.loadConst(0);
-		Code.putFalseJump(Code.ne, 0);
-		forExitAddr = Code.pc - 2;
+		firstCond = true;
 		Code.putJump(0);
-		forBodyAddr = Code.pc - 2;
+		forBodyAddr = Code.pc -2;
 		forAfterAddr = Code.pc;
-		continueAddr = new ArrayList<Integer>();
-		breakAddr = new ArrayList<Integer>();
+		continueAddr = new ArrayList<>();
+		breakAddr = new ArrayList<>();
 	}
+
 	public void visit(StatementFor stmt) {
-		for(int addr : continueAddr) Code.fixup(addr);
+		for (int adr : continueAddr) Code.fixup(adr);
 		Code.putJump(forAfterAddr);
-		for(int addr : breakAddr) Code.fixup(addr);
-		Code.fixup(forExitAddr);
+		for (int adr : breakAddr) Code.fixup(adr);
+		for (int adr : falseAddr) Code.fixup(adr);
+		
 		forBodyAddr = forBodyStack.pop();
 		forAfterAddr = forAfterStack.pop();
-		forExitAddr = forExitStack.pop();
 		continueAddr = continueStack.pop();
 		breakAddr = breakStack.pop();
+		falseAddr = falseStack.pop();
+		trueAddr = trueStack.pop();
 	}
-	
+
 	public void visit(ForBodyStart dummy) {
 		Code.putJump(forCondAddr);
 		Code.fixup(forBodyAddr);
+		for(int adr : trueAddr) Code.fixup(adr);
 	}
-	
+
+	public void visit(NoForCond dummy) {
+		falseStack.push(falseAddr);
+		trueStack.push(trueAddr);
+		falseAddr = new ArrayList<>();
+		trueAddr = new ArrayList<>();
+	}
 	public void visit(StatementContinue stmt) {
 		Code.putJump(0);
 		continueAddr.add(Code.pc - 2);
 	}
+
 	public void visit(StatementBreak stmt) {
 		Code.putJump(0);
-		breakAddr.add(Code.pc -2);
+		breakAddr.add(Code.pc - 2);
 	}
 }

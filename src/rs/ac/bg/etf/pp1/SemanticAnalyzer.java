@@ -406,7 +406,6 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			report_error("return void metode vraca vrednost ", returnExpr);
 			return;
 		}
-		
 
 	}
 
@@ -421,7 +420,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			report_error("return vraca pogresan tip ", returnExpr);
 			return;
 		}
-		if(!returnExpr.getExpr().obj.getType().assignableTo(currentMethod.getType())) {
+		if (!returnExpr.getExpr().obj.getType().assignableTo(currentMethod.getType())) {
 			report_error("tip izraza nekompatibilan sa deklaracijom metoda", returnExpr);
 		}
 	}
@@ -763,6 +762,38 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			report_error("findAny moze da se pozove samo nad tipom niza", stmt);
 			return;
 		}
+	}
+
+	// MAP
+	public void visit(MapDesignatorStatement stmt) {
+		Obj ident = Tab.find(stmt.getId());
+		if (ident == Tab.noObj) {
+			report_error("identifikator u map nije pronadjen u tabeli simobola", stmt);
+			return;
+		}
+		if (ident.getKind() != Obj.Var) {
+			report_error("ident u map mora biti promenljiva", stmt);
+			return;
+		}
+		
+		if (!stmt.getDesignator().obj.getType().getElemType()
+				.equals(stmt.getDesignator1().obj.getType().getElemType())) {
+			report_error("nizovi u map moraju biti istog tipa", stmt);
+			return;
+		}
+		if (!stmt.getDesignator().obj.getType().getElemType().equals(ident.getType())) {
+			report_error("niz i ident nisu istog tipa u map", stmt);
+			return;
+		}
+		if (stmt.getDesignator().obj.getType().getKind() != Struct.Array) {
+			report_error("izraz sa map se mora dodeliti nizu", stmt);
+			return;
+		}
+		if (stmt.getDesignator1().obj.getType().getKind() != Struct.Array) {
+			report_error(".map se moze pozvati samo nad nizom", stmt);
+			return;
+		}
+
 	}
 
 	public boolean passed() {
