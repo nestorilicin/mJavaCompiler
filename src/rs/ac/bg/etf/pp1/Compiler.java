@@ -27,8 +27,7 @@ public class Compiler {
 		DOMConfigurator.configure(Log4JUtils.instance().findLoggerConfigFile());
 		Log4JUtils.instance().prepareLogFile(Logger.getRootLogger());
 	}
-	static final String defaultInputFileName = "test/program.mj";
-	static final String defaultOutputFileName = "test/program.obj";
+	static final String defaultInputFileName = "test/test9_map.mj";
 	static Struct boolStruct = new Struct(Struct.Bool);
 
 	public static void tsdump() {

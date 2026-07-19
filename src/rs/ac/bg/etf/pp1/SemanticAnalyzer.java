@@ -387,6 +387,9 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			return;
 		Tab.chainLocalSymbols(currentMethod);
 		Tab.closeScope();
+		if (currentMethod.getName().equals("main") && currentMethod.getLevel() != 0) {
+			report_error("Metod main ne sme da ima parametere", methodDecl);
+		}
 		methodDecl.obj = currentMethod;
 		currentMethod = null;
 	}
@@ -673,6 +676,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 
 	// Expr tern
 	public void visit(ExprTernary expr) {
+		if (!expr.getCondition().obj.getType().equals(boolStruct)) {
+		    report_error("Uslov ternarnog operatora mora biti tipa bool", expr);
+		    expr.obj = Tab.noObj;
+		    return;
+		}
 		if (!expr.getExpr().obj.getType().compatibleWith(expr.getExpr1().obj.getType())) {
 			report_error("Vrednosti u ternarnome operatoru nisu istog tipa", expr);
 			expr.obj = Tab.noObj;
