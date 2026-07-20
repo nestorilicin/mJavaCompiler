@@ -19,7 +19,6 @@ import rs.etf.pp1.mj.runtime.Code;
 import rs.etf.pp1.symboltable.Tab;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
-import rs.etf.pp1.symboltable.visitors.DumpSymbolTableVisitor;
 import rs.etf.pp1.symboltable.visitors.SymbolTableVisitor;
 
 public class Compiler {
@@ -31,7 +30,7 @@ public class Compiler {
 	static Struct boolStruct = new Struct(Struct.Bool);
 
 	public static void tsdump() {
-		SymbolTableVisitor visitor = new DumpSymbolTableVisitor();
+		SymbolTableVisitor visitor = new MySymbolTableVisitor();
 		Tab.dump(visitor);
 	}
 

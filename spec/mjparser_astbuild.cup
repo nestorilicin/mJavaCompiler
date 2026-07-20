@@ -96,7 +96,6 @@ nonterminal ClassOptionalMethods ClassOptionalMethods;
 nonterminal AbstractClassOptionalMethods AbstractClassOptionalMethods;
 nonterminal SingleAbsClassMethod SingleAbsClassMethod;
 nonterminal AbsClassMethodList AbsClassMethodList;
-nonterminal SingleAbstractMethodDecl SingleAbstractMethodDecl;
 nonterminal DesignatorStatement DesignatorStatement;
 nonterminal Addop Addop;
 nonterminal Mulop Mulop;
@@ -118,7 +117,8 @@ nonterminal ForCondStart ForCondStart;
 nonterminal ForCondEnd ForCondEnd;
 nonterminal ForBodyStart ForBodyStart;
 nonterminal OrSign OrSign;
-nonterminal rs.etf.pp1.symboltable.concepts.Obj Relop, SingleStatement, MethodReturn, Designator, MethodName, SingleMethodDecl, ProgName, Program, ClassDecl, AbstractClassDecl, ClassExtends;
+
+nonterminal rs.etf.pp1.symboltable.concepts.Obj Relop, SingleStatement, MethodReturn, Designator, MethodName, AbstractMethodName, SingleMethodDecl, SingleAbstractMethodDecl, ProgName, Program, ClassDecl, AbstractClassDecl, ClassExtends;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj CondTermList, CondFactList, Condition, CondTerm, CondFact, Term, Factor, Expr, ExprTernary, ExprArithmetic, Type, ConstValue, OptionalSquares, DesignatorArray;
 nonterminal java.util.ArrayList ActParsList, ActPars;
 
@@ -197,8 +197,8 @@ AbsClassMethodList ::= (ListAbsClassMethodList) AbsClassMethodList:A1 SingleAbsC
 			(EmptyAbsClassMethodList) {: RESULT=new EmptyAbsClassMethodList(); :} /* epsilon */
 			;
 SingleAbsClassMethod ::= (MethodSingleAbsClassMethod) SingleMethodDecl:S1 {: RESULT=new MethodSingleAbsClassMethod(S1); RESULT.setLine(S1left); :} | (AbstractMethodSingleAbsClassMethod) SingleAbstractMethodDecl:S1 {: RESULT=new AbstractMethodSingleAbsClassMethod(S1); RESULT.setLine(S1left); :};
-SingleAbstractMethodDecl ::= (SingleAbstractMethodDecl) ABSTRACT MethodReturn:M1 IDENT:I2 LPAREN FormPars:F3 RPAREN SEMI {: RESULT=new SingleAbstractMethodDecl(M1, I2, F3); RESULT.setLine(M1left); :};
-
+SingleAbstractMethodDecl ::= (SingleAbstractMethodDecl) ABSTRACT MethodReturn:M1 AbstractMethodName:A2 LPAREN FormPars:F3 RPAREN SEMI {: RESULT=new SingleAbstractMethodDecl(M1, A2, F3); RESULT.setLine(M1left); :};
+AbstractMethodName ::= (AbstractMethodName) IDENT:methodName {: RESULT=new AbstractMethodName(methodName); RESULT.setLine(methodNameleft); :};
 /* METHOD */
 MethodDecl ::= (MethodDecl) MethodDeclList:M1 {: RESULT=new MethodDecl(M1); RESULT.setLine(M1left); :};
 MethodDeclList ::= (ListMethodDeclList) MethodDeclList:M1 SingleMethodDecl:S2 {: RESULT=new ListMethodDeclList(M1, S2); RESULT.setLine(M1left); :}

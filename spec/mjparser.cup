@@ -81,7 +81,7 @@ nonterminal StatementList;
 nonterminal StatementContinue, StatementBreak;
 nonterminal ClassName, ClassOptionalMethods;
 nonterminal AbstractClassOptionalMethods;
-nonterminal SingleAbsClassMethod, AbsClassMethodList, SingleAbstractMethodDecl;
+nonterminal SingleAbsClassMethod, AbsClassMethodList;
 nonterminal DesignatorStatement;
 nonterminal Addop, Mulop;
 nonterminal StatementReturn;
@@ -92,7 +92,8 @@ nonterminal IfStart, IfEnd, ElseStart;
 nonterminal CallStart;
 nonterminal ForCondStart, ForCondEnd, ForBodyStart;
 nonterminal OrSign;
-nonterminal rs.etf.pp1.symboltable.concepts.Obj Relop, SingleStatement, MethodReturn, Designator, MethodName, SingleMethodDecl, ProgName, Program, ClassDecl, AbstractClassDecl, ClassExtends;
+
+nonterminal rs.etf.pp1.symboltable.concepts.Obj Relop, SingleStatement, MethodReturn, Designator, MethodName, AbstractMethodName, SingleMethodDecl, SingleAbstractMethodDecl, ProgName, Program, ClassDecl, AbstractClassDecl, ClassExtends;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj CondTermList, CondFactList, Condition, CondTerm, CondFact, Term, Factor, Expr, ExprTernary, ExprArithmetic, Type, ConstValue, OptionalSquares, DesignatorArray;
 nonterminal java.util.ArrayList ActParsList, ActPars;
 
@@ -171,8 +172,8 @@ AbsClassMethodList ::= (ListAbsClassMethodList) AbsClassMethodList SingleAbsClas
 			(EmptyAbsClassMethodList) /* epsilon */
 			;
 SingleAbsClassMethod ::= (MethodSingleAbsClassMethod) SingleMethodDecl | (AbstractMethodSingleAbsClassMethod) SingleAbstractMethodDecl;
-SingleAbstractMethodDecl ::= (SingleAbstractMethodDecl) ABSTRACT MethodReturn IDENT LPAREN FormPars RPAREN SEMI;
-
+SingleAbstractMethodDecl ::= (SingleAbstractMethodDecl) ABSTRACT MethodReturn AbstractMethodName LPAREN FormPars RPAREN SEMI;
+AbstractMethodName ::= (AbstractMethodName) IDENT:methodName;
 /* METHOD */
 MethodDecl ::= (MethodDecl) MethodDeclList;
 MethodDeclList ::= (ListMethodDeclList) MethodDeclList SingleMethodDecl
